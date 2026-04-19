@@ -1,0 +1,347 @@
+/* ===== Main Wrapper ===== */
+.register-wrapper {}
+
+/* ===== Header ===== */
+.register-header {
+  border: 1px solid #bebbbb;
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+/* ===== Card ===== */
+.register-card {
+  border: 1px solid #ddd;
+  padding: 20px;
+  background: #fff;
+  height: auto;
+  overflow: visible;
+}
+
+/* ===== FORM GRID ===== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 20px;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .input-addon {
+    width: 110px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* FIX full span issue */
+  .field-wrapper.full {
+    grid-column: span 1;
+  }
+}
+
+/* ===== Field Wrapper ===== */
+.field-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== Input Group ===== */
+.input-group-m {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Mobile input layout */
+@media (max-width: 768px) {
+  .input-group-m {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .input-addon {
+    width: 100%;
+  }
+}
+
+/* Label */
+.input-addon {
+  width: 130px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Inputs */
+.input-group-m input,
+.input-group-m select {
+  flex: 1;
+  width: 100%; /* FIX overflow */
+  padding: 8px 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  transition: 0.2s ease;
+}
+
+.input-group-m input:focus,
+.input-group-m select:focus {
+  border-color: #00bcd4;
+  outline: none;
+}
+
+/* ===== Error ===== */
+.error {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #dc3545;
+}
+
+.error-input {
+  border-color: #dc3545 !important;
+}
+
+/* ===== Button Section ===== */
+.register-button {
+  border: 1px solid #ddd;
+  margin-bottom: 40px;
+  padding: 10px;
+  background: #f9f9f9;
+}
+
+/* Button */
+.primary-btn {
+  background: #00bcd4;
+  color: #fff;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  width: auto;
+  transition: 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #0097a7;
+}
+
+/* Mobile button */
+@media (max-width: 768px) {
+  .primary-btn {
+    width: 100%;
+  }
+
+  .register-card {
+    padding: 15px;
+  }
+
+  .register-header {
+    padding: 10px;
+  }
+}
+
+/* ===== TABLE SECTION ===== */
+.card-d {
+  background: #ffffff;
+  display: block;
+  width: 100%;
+}
+
+
+/* Header */
+.manageTable-head {
+  background-color: #f2f2f2;
+  border: 1px solid #ddd;
+  display: flex;
+  padding: 15px 10px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* FIX inline width issue */
+.right-section select,
+.right-section input {
+  width: 100% !important;
+  max-width: 100%;
+}
+
+.right-section .d-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+
+@media (max-width: 768px) {
+
+  .right-section {
+    width: 100%;
+    align-items: stretch !important;
+  }
+
+  .right-section .d-flex {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .right-section select,
+  .right-section input,
+  .right-section button {
+    width: 100% !important;
+  }
+
+}
+
+.right-section button {
+  margin: 0;
+}
+
+.right-section {
+  gap: 10px;
+}
+
+/* Mobile header */
+@media (max-width: 768px) {
+  .manageTable-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* ===== Action Buttons ===== */
+.action-btn {
+  min-width: 150px;
+  height: 32px;
+  font-size: 13px;
+  color: white;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+/* Mobile buttons */
+@media (max-width: 768px) {
+  .action-btn {
+    width: 100%;
+  }
+}
+
+/* Colors */
+.btn-import { background-color: #0d6efd; }
+.btn-delete { background-color: #ea818b; }
+.btn-active { background-color: #198754; }
+.btn-terminated { background-color: #ffc107; color: #000; }
+
+/* ===== Table ===== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: block;
+  -webkit-overflow-scrolling: touch;
+}
+
+
+
+.table-wrapper table {
+  width: max-content;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+.table-wrapper th,
+.table-wrapper td {
+  white-space: nowrap;
+}
+
+table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+table th,
+table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  text-align: left;
+}
+
+table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Edit Button */
+.edit-btn {
+  background: #0d6efd;
+  color: #fff;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* ===== Extra Buttons ===== */
+.blue-btn,
+.red-btn,
+.green-btn,
+.yellow-btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+}
+
+.blue-btn { background: #0d6efd; color: white; }
+.red-btn { background: #dc3545; color: white; }
+.green-btn { background: #198754; color: white; }
+.yellow-btn { background: #ffc107; }
+
+/* ===== GLOBAL FIX ===== */
+body {
+  overflow-x: hidden;
+}
+
+
+/* ===== MODAL RESPONSIVE ===== */
+
+@media (max-width: 576px) {
+  .modal-content {
+    border-radius: 12px;
+  }
+
+  .modal-header h5 {
+    font-size: 16px;
+  }
+
+  .modal-body {
+    padding: 15px !important;
+  }
+
+  .modal-footer {
+    padding: 15px !important;
+  }
+}
+
+/* Input spacing */
+.modal-body .form-label {
+  font-size: 13px;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+  font-size: 14px;
+}
+

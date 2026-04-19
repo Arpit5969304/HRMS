@@ -1,0 +1,155 @@
+/* ================= PAGE WRAPPER ================= */
+.dashboard-page {
+  width: 100%;
+  padding: 15px;
+}
+
+/* ================= MAIN CARD ================= */
+.dashboard-card {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #143e98, #3573bf, #143e98);
+  color: #fff;
+  padding: 25px 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  flex-wrap: wrap;
+  gap: 12px;   /* ✅ improved spacing */
+}
+
+/* Welcome */
+.welcome-section h2 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.welcome-section p {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Time */
+.time-section {
+  text-align: right;
+}
+
+.time-section h2 {
+  font-size: 20px;
+  margin-top: 4px;
+}
+
+/* ================= REMOVE GRID (IMPORTANT) ================= */
+.dates-cards {
+  display: block !important;
+}
+
+/* ================= CARD ================= */
+.card {
+  width: 100%;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 5px 16px rgba(0,0,0,0.08);
+  height: 100%;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+/* Hover */
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+/* Title */
+.card h3 {
+  font-size: 15px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+/* ================= LIST ================= */
+.card-body-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* Empty */
+.card p {
+  font-size: 13px;
+  color: #666;
+}
+
+/* ================= FIX ROW SPACING ================= */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* ================= EQUAL HEIGHT FIX ================= */
+.dashboard-inner-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-inner-card .card-body-list {
+  flex: 1;
+}
+
+/* ================= RESPONSIVE ================= */
+
+/* Tablet */
+@media (max-width: 992px) {
+  .welcome-section h2,
+  .time-section h2 {
+    font-size: 18px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .dashboard-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .time-section {
+    text-align: left;
+  }
+
+  .card {
+    padding: 14px;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .dashboard-page {
+    padding: 10px;
+  }
+
+  .card {
+    padding: 12px;
+  }
+
+  .list-item {
+    font-size: 12px;
+  }
+}

@@ -1,0 +1,117 @@
+/* ===== HEADER RESPONSIVE ===== */
+.card-header {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ===== SUMMARY CARDS ===== */
+@media (max-width: 992px) {
+
+  .row.mb-4 > div {
+    margin-bottom: 10px;
+  }
+
+}
+
+/* ===== MOBILE FIX ===== */
+@media (max-width: 768px) {
+
+  /* Header stack */
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .card-header h4 {
+    font-size: 18px;
+  }
+
+  /* Employee info */
+  .card-body h5 {
+    font-size: 16px;
+  }
+
+  /* Summary cards full width */
+  .row.mb-4 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row.mb-4 > div {
+    width: 100%;
+  }
+
+  /* Table scroll */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 700px; /* prevent break */
+  }
+
+  /* Compact table text */
+  .table th,
+  .table td {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+}
+
+/* ===== SMALL MOBILE ===== */
+@media (max-width: 480px) {
+
+  .card {
+    padding: 10px;
+  }
+
+  .card-header h4 {
+    font-size: 16px;
+  }
+
+  .table th,
+  .table td {
+    font-size: 12px;
+  }
+
+}
+
+
+
+/* ===== STICKY FIRST COLUMN (MOBILE ONLY) ===== */
+@media (max-width: 768px) {
+
+  /* Ensure scroll */
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table {
+    min-width: 700px;
+  }
+
+  /* Sticky first column */
+  .table th:first-child,
+  .table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff; /* important */
+  }
+
+  /* Header priority */
+  .table thead th:first-child {
+    z-index: 3;
+  }
+
+  /* Optional shadow for separation */
+  .table th:first-child,
+  .table td:first-child {
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  }
+
+}

@@ -1,0 +1,297 @@
+/* ============================= */
+/* Dashboard Layout */
+/* ============================= */
+
+.main-emp {
+  width: 100%;
+  padding: 20px;
+}
+
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Main section */
+.main {
+  flex: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Content area */
+.content {
+  flex: 1;
+  padding: 10px;
+  background: #dfe6ef;
+  overflow-y: auto;
+}
+
+/* Cards */
+.card {
+  height: auto;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================= */
+/* Form Fix */
+/* ============================= */
+
+/* ============================= */
+/* Employee Profile Card */
+/* ============================= */
+
+.employee-profile-card {
+  border-radius: 12px;
+  border: none;
+    overflow-x: visible;
+}
+
+.employee-header {
+  padding: 20px;
+  background: #f4f6f9;
+  display: flex;
+  align-items: center;
+}
+
+.employee-avatar img {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.employee-name {
+  font-weight: 600;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.employee-email {
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #34495e;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* ============================= */
+/* Employee Detail Grid */
+/* ============================= */
+
+.detail-box {
+  display: flex;
+  flex-direction: column;
+  background: #f8f9fa;
+  padding: 10px 14px;
+  border-radius: 6px;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+/* ============================= */
+/* Professional Attendance Theme */
+/* ============================= */
+
+/* ============================= */
+/* Light Table Attendance Calendar */
+/* ============================= */
+
+.fc {
+  font-family: "Segoe UI", sans-serif;
+  font-size: 15px;
+  background: #ffffff;
+}
+
+/* Header row (Su Mo Tu...) */
+.fc-col-header-cell {
+  background: #f4f4f4;
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 12px 0;
+  border: 1px solid #cfd4da;
+}
+
+/* Table borders */
+.fc-theme-standard td,
+.fc-theme-standard th {
+  border: 1px solid #16181b;
+}
+
+/* Calendar cell */
+.fc-daygrid-day {
+  background: #ffffff;
+}
+
+/* Align cell content center */
+.fc-daygrid-day-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 70px;
+}
+
+/* Date number */
+.fc-daygrid-day-number {
+  width: 100%;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* Remove extra spacing inside cell */
+.fc .fc-daygrid-body-natural .fc-daygrid-day-events {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Hide event badges if not needed */
+.fc-event {
+  display: none;
+}
+
+/* Sunday column (light blue like screenshot) */
+.fc-day-sun {
+  background: #b9d6df !important;
+}
+
+/* Today highlight (light yellow) */
+.fc-day-today {
+  background: #e8d9b5 !important;
+}
+
+/* Hover effect */
+.fc-daygrid-day:hover {
+  background: #f5f5f5;
+}
+
+/* Remove event spacing */
+.fc-daygrid-event {
+  margin: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fc .fc-daygrid-day-frame {
+    min-height: 55px;
+  }
+}
+
+
+/* ===== RESPONSIVE FIX ===== */
+
+
+/* ============================= */
+/* RESPONSIVE FIX (PRODUCTION) */
+/* ============================= */
+
+/* Dashboard responsive */
+@media (max-width: 992px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .main {
+    width: 100%;
+  }
+}
+
+/* Content padding fix */
+@media (max-width: 768px) {
+  .content {
+    padding: 10px;
+  }
+}
+
+/* Header mobile fix */
+@media (max-width: 768px) {
+  .card-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px;
+  }
+}
+
+/* Employee profile responsive */
+@media (max-width: 768px) {
+  .employee-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .employee-avatar {
+    margin-bottom: 10px;
+  }
+}
+
+/* Calendar wrapper */
+.calendar-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* FIX: remove hard min width on mobile */
+.fc {
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .fc {
+    min-width: 600px;
+  }
+}
+
+/* Calendar cell size mobile */
+@media (max-width: 768px) {
+  .fc .fc-daygrid-day-frame {
+    min-height: 50px;
+  }
+
+  .fc-daygrid-day-number {
+    font-size: 16px;
+  }
+}
+
+/* Inputs full width */
+@media (max-width: 576px) {
+  .form-control,
+  .form-select,
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Table scroll fix */
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Card spacing mobile */
+@media (max-width: 576px) {
+  .card {
+    margin-bottom: 15px;
+  }
+}

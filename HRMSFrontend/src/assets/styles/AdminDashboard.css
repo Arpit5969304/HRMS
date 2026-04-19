@@ -1,0 +1,117 @@
+/* ===== Container ===== */
+.dashboard-container {
+  width: 100%;
+}
+
+/* ===== GRID LAYOUT ===== */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 20px;
+}
+
+/* ===== LEFT SIDE ===== */
+.left-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== RIGHT SIDE ===== */
+.right-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===== Welcome ===== */
+.welcome-banner {
+  background: #0d6efd;
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ===== Summary Cards ===== */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.summary-card {
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* ===== Bottom Section ===== */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.info-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* ===== Items ===== */
+.item-card {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+/* ===== Filter ===== */
+.filter-card {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== Calendar ===== */
+.calendar-box {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+/* ===== RESPONSIVE 🔥 ===== */
+
+/* Tablet */
+@media (max-width: 992px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bottom-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-row {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,505 @@
+/* ===============================
+   PROFILE CARD
+================================= */
+.profile-card {
+  border-radius: 14px;
+  margin-bottom: 30px;
+}
+
+/* Header */
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #143e98, #3573bf, #143e98);
+  margin-bottom: 20px;
+  border: 1px solid black;
+  padding: 15px;
+  flex-wrap: wrap;
+  color: white;
+  border-radius: 10px;
+  gap: 20px;
+}
+
+.profile-card-h3 {
+
+  padding: 7px;
+  margin-top: 10px;
+  border-radius: 10px;
+}
+
+.input-group input {
+  margin-top: 0px;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.profile-type {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Edit Button */
+/* Break Button */
+.break-btn{
+  background:#fac72d;
+  border:none;
+  padding:8px 18px;
+  border-radius:8px;
+  font-weight:500;
+}
+
+/* Modal Style */
+.break-modal{
+  border-radius:12px;
+  border:none;
+}
+
+/* Break Options Container */
+.break-options{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:20px;
+}
+
+/* Break Buttons */
+.break-option{
+  border:none;
+  padding:12px;
+  border-radius:8px;
+  background:#f8f9fa;
+  font-weight:500;
+  transition:all .2s;
+}
+
+.break-option:hover{
+  background:#e9ecef;
+  transform:translateY(-1px);
+}
+
+/* ===============================
+   PROFILE SECTIONS
+================================= */
+.profile-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+/* Section Card */
+.section-card {
+  background: #fafbff;
+  padding: 0 20px 20px;
+  border-radius: 10px;
+  border: 1px solid #eef1f6;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 10px;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-left: 20px;
+}
+
+.detail-item {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.detail-item:hover {
+  transform: translateY(-2px);
+}
+
+.detail-icon {
+  color: #2563eb;
+  font-size: 18px;
+}
+
+.detail-text span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.detail-text p {
+  margin: 5px 0 0;
+  font-weight: 600;
+  color: #111827;
+}
+
+
+
+
+.fc .fc-daygrid-day-frame {
+  padding: 2px;
+  min-height: 50px;
+}
+
+.fc .fc-daygrid-day-number {
+  font-size: 12px;
+}
+
+.fc-event {
+  font-size: 10px;
+  padding: 2px;
+}
+
+/* ===============================
+   RESPONSIVE PROFILE
+================================= */
+@media (max-width: 1024px) {
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===============================
+   MODAL OVERLAY
+================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 15px;
+}
+
+/* Modal Container */
+.modal-container {
+  width: 950px;
+  max-width: 95%;
+  max-height: 90vh;
+  background: #fff;
+  padding: 10px 30px;
+  border-radius: 8px;
+  overflow-y: auto;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Header */
+.modal-header {
+  background: #1f6feb;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 5px;
+  border-radius: 8px 8px 0 0;
+}
+
+.close-icon {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: white;
+  cursor: pointer;
+}
+
+/* Modal Body */
+
+
+/* ===============================
+   FORM GRID
+================================= */
+.form-grids {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.full-width {
+  grid-column: span 2;
+}
+
+/* ===============================
+   INPUT GROUP (ADD-ON STYLE)
+================================= */
+.input-group {
+  display: flex;
+  width: 100%;
+}
+
+/* Left Label Box */
+.input-addon {
+  padding: 9px 12px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-right: none;
+  border-radius: 6px 0 0 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  min-width: 150px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Inputs */
+.input-group input,
+.input-group select,
+.input-group textarea {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+/* Textarea */
+.input-group textarea {
+  min-height: 80px;
+  resize: none;
+}
+
+/* Focus Effect */
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* ===============================
+   MODAL FOOTER
+================================= */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.save-btn {
+  background: #198754;
+  color: #fff;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.save-btn:hover {
+  background: #157347;
+}
+
+.close-btn {
+  background: #6c757d;
+  color: #fff;
+  padding: 9px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.close-btn:hover {
+  background: #5c636a;
+}
+
+/* ===============================
+   RESPONSIVE FORM
+================================= */
+@media (max-width: 992px) {
+  .form-grids {
+    grid-template-columns: 1fr;
+  }
+
+  .full-width {
+    grid-column: span 1;
+  }
+
+  .input-addon {
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 576px) {
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-addon {
+    border-radius: 6px 6px 0 0;
+    border-right: 1px solid #d1d5db;
+    border-bottom: none;
+  }
+
+  .input-group input,
+  .input-group select,
+  .input-group textarea {
+    border-radius: 0 0 6px 6px;
+  }
+}
+
+/* ===== TABLET ===== */
+@media (max-width: 992px) {
+
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grids {
+    grid-template-columns: 1fr;
+  }
+
+  .input-group.full-width {
+    grid-column: span 1;
+  }
+
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-btn {
+    width: 100%;
+  }
+
+  .profile-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    border-radius: 10px;
+    padding: 15px;
+  }
+
+  .modal-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+}
+
+
+
+/* ===== TABLET ===== */
+@media (max-width: 992px) {
+
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grids {
+    grid-template-columns: 1fr;
+  }
+
+  .input-group.full-width {
+    grid-column: span 1;
+  }
+
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+
+  .profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-btn {
+    width: 100%;
+  }
+
+  .profile-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 18px;
+  }
+
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-container {
+    max-width: 100%;
+    border-radius: 10px;
+    padding: 15px;
+  }
+
+  .modal-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+}

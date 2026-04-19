@@ -1,0 +1,740 @@
+/* =======================================================
+   CONTAINER & TITLE
+======================================================= */
+.attendance-container {
+  background: #ffffff;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.attendance-title {
+  text-align: center;
+  font-size: 24px;
+  color: #212529;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.top-tr {
+  text-align: left;
+  padding: 4px 6px;
+  background-color: white;
+  border-radius: 2px;
+}
+
+.top-tr h3 {
+  margin: 2px 0;
+  font-size: 16px;
+  padding: 8px;
+}
+
+/* =======================================================
+   HEADER SECTION (Attendance Title + Buttons)
+======================================================= */
+.attendance-headingSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background: linear-gradient(90deg, #143e98, #3573bf, #143e98);
+  color: white;
+  margin-bottom: 40px;
+  border: 1px solid black;
+  padding: 20px;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.attendance-headingSection h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.attendance-headingSection p {
+  margin: 4px 0 0 0;
+  font-size: 14px;
+  color: gray;
+}
+
+.attendance-headingSection button {
+  margin-left: 10px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.attendance-headingSection button:first-child {
+  background-color: rgb(177, 43, 43);
+  color: white;
+}
+
+.attendance-headingSection button:last-child {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.attendance-headingSection button:hover {
+  opacity: 0.85;
+}
+
+/* =======================================================
+   TOP ROW (Month / Year / Navigation)
+======================================================= */
+.attendance-top-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid black;
+  background-color: #f0f0f0;
+  padding: 12px 18px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.attendance-top-row button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: #4a90e2;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.attendance-top-row button:hover {
+  background-color: #357abd;
+}
+
+.attendance-top-row label {
+  font-weight: 500;
+  margin-right: 5px;
+}
+
+.attendance-top-row > div {
+  display: flex;
+  align-items: center;
+}
+
+.attendance-top-row select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s ease;
+}
+
+.attendance-top-row select:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 3px rgba(74, 144, 226, 0.5);
+}
+
+/* =======================================================
+   LEGEND
+======================================================= */
+.attendance-legend {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.attendance-legend div {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.attendance-legend div:hover::after {
+  content: attr(data-title);
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #212529;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.attendance-legend .legend {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.attendance-legend .present {
+  background: #b7e48a;
+}
+
+.attendance-legend .absent {
+  background: #e6837a;
+}
+
+.attendance-legend .sunday {
+  background: #dcdcdc;
+}
+
+/* =======================================================
+   FILTERS
+======================================================= */
+.attendance-filter {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-item label {
+  font-weight: 600;
+  margin-right: 5px;
+  color: #495057;
+}
+
+.filter-item select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.filter-item select:hover {
+  border-color: #495057;
+}
+
+/* =======================================================
+   CALENDAR
+======================================================= */
+.calendar-header-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 600;
+  padding: 12px 0;
+  color: #495057;
+}
+
+.calendar-grid {
+  width: 100%;
+}
+
+/* Each week row */
+.calendar-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.calendar-cell {
+  height: 70px;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #212529;
+  background: #ffffff;
+  display: flex;
+  border: 1px solid black;
+  align-items: center;
+  justify-content: center;
+  transition:
+    0.3s ease,
+    transform 0.2s ease;
+}
+
+.calendar-cell.present {
+  background: #b7e48a;
+}
+
+.calendar-cell.absent {
+  background: #e6837a;
+}
+
+.calendar-cell.sunday {
+  background: #dcdcdc;
+}
+
+.empty {
+  background: transparent;
+  border: none;
+}
+
+.hidden {
+  opacity: 0.15;
+  transition: opacity 0.3s ease;
+}
+
+/* =======================================================
+   ATTENDANCE TABLE
+======================================================= */
+.attendance-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background-color: #fff;
+  margin: 20px 0;
+}
+
+.attendance-table thead {
+  background-color: #e0e0e0;
+  color: #000000;
+  border-bottom: 1px solid #959393;
+}
+
+.attendance-table thead th {
+  padding: 10px 35px;
+  font-weight: 600;
+  text-align: center;
+  font-size: 14px;
+}
+
+.attendance-table tbody td {
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 13px;
+  border-bottom: 1px solid #e0e0e0;
+  transition: background 0.3s;
+}
+
+.attendance-table tbody tr:hover {
+  background-color: #f1f5ff;
+}
+
+.attendance-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.attendance-table .present {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.attendance-table .absent {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.attendance-table .sunday {
+  font-weight: 600;
+}
+
+/* =======================================================
+   EDIT BUTTON
+======================================================= */
+.edit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: none;
+  background-color: #0d6efd;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background-color: #0a58ca;
+  transform: scale(1.05);
+}
+
+/* =======================================================
+   MODAL
+======================================================= */
+.modal-overlay-att {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-container-att {
+  width: 400px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.close-btn {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.modal-body {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-body input,
+.modal-body textarea {
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.modal-body input:focus,
+.modal-body textarea:focus {
+  border-color: #0d6efd;
+}
+
+.modal-footer {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn {
+  background: #0d6efd;
+  border: none;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: #0a58ca;
+}
+
+/* =======================================================
+   MONTH NAVIGATION
+======================================================= */
+.month-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.month-navigation span {
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 130px;
+  text-align: center;
+}
+
+.month-navigation button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-navigation button:hover {
+  background-color: #e0e0e0;
+}
+
+/* =======================================================
+   RESPONSIVE
+======================================================= */
+@media screen and (max-width: 1024px) {
+  .attendance-table thead th,
+  .attendance-table tbody td {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+}
+
+@media screen and (max-width: 960px) {
+  .attendance-container {
+    width: 100%;
+    padding: 20px;
+  }
+
+  .attendance-top-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .attendance-filter {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .attendance-table {
+    overflow-x: auto;
+  }
+}
+
+/* =======================================================
+   ANIMATION
+======================================================= */
+@keyframes fadeIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+/* ===== RESPONSIVE FIX (NO STYLE CHANGE) ===== */
+
+/* Ensure container handles overflow properly */
+.attendance-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Keep grid stable */
+.calendar-header-row,
+.calendar-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+/* Prevent cells from collapsing */
+.calendar-cell {
+  min-width: 45px;
+  box-sizing: border-box;
+}
+
+/* Tablet fix */
+@media (max-width: 768px) {
+  .calendar-cell {
+    min-width: 40px;
+    font-size: 12px;
+  }
+}
+
+/* Mobile fix */
+@media (max-width: 480px) {
+  .attendance-container {
+    overflow-x: auto;
+  }
+
+  /* force scroll instead of breaking */
+  .calendar-header-row,
+  .calendar-row {
+    grid-template-columns: repeat(7, 50px);
+  }
+
+  .calendar-cell {
+    min-width: 50px;
+    font-size: 11px;
+  }
+}
+
+/* ===== TABLE RESPONSIVE FIX ===== */
+
+/* Smooth horizontal scroll */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  display: block;
+}
+
+/* Prevent table collapse */
+.attendance-table {
+  min-width: 850px; /* important */
+  width: 100%;
+}
+
+/* Keep content readable */
+.attendance-table th,
+.attendance-table td {
+  white-space: nowrap;
+}
+
+/* ===== MODAL RESPONSIVE FIX ===== */
+
+.modal-overlay-att {
+  padding: 10px;
+}
+
+/* Prevent modal overflow */
+.modal-container-att {
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ===== MOBILE OPTIMIZATION ===== */
+@media (max-width: 768px) {
+  .attendance-table th,
+  .attendance-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .top-tr h3 {
+    font-size: 16px;
+  }
+}
+
+/* ===== SMALL MOBILE ===== */
+@media (max-width: 480px) {
+  /* Force scroll instead of breaking */
+  .attendance-table {
+    min-width: 750px;
+  }
+
+  .modal-container-att {
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  /* Stack modal buttons */
+  .modal-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+
+.attendance-table th:first-child,
+.attendance-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #fff; /* important */
+}
+
+/* Header sticky above cells */
+.attendance-table thead th:first-child {
+  z-index: 3;
+}
+
+/* Optional subtle shadow for separation */
+.attendance-table td:first-child,
+.attendance-table th:first-child {
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+
+/* ===== MOBILE ONLY ===== */
+@media (max-width: 768px) {
+.attendance-table thead th:first-child {
+  z-index: 5;
+}
+
+  .attendance-table th:first-child,
+  .attendance-table td:first-child {
+    min-width: 90px; /* readable */
+  }
+
+}
+
+/* ===== SMALL MOBILE ===== */
+@media (max-width: 480px) {
+
+  .attendance-table th:first-child,
+  .attendance-table td:first-child {
+    min-width: 100px;
+    font-size: 12px;
+  }
+
+}
+
+
+/* ===== FINAL MOBILE STICKY FIX ===== */
+@media (max-width: 768px) {
+
+  /* IMPORTANT: enable scroll */
+  .table-responsive {
+    max-height: 65vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Sticky header */
+  .attendance-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: #fff;
+  }
+
+  /* Sticky first column */
+ 
+
+  /* Top-left corner fix */
+  
+
+}
+
+
+
+/* ===== MOBILE ONLY HEADER STICKY ===== */
+@media (max-width: 768px) {
+
+  .table-responsive {
+    max-height: 65vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ONLY HEADER STICKY */
+  .attendance-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: #fff;
+  }
+
+}
+
+

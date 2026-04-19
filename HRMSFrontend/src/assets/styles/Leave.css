@@ -1,0 +1,271 @@
+.leave-container {
+  width: 100%;
+  overflow: visible !important;
+}
+/* Tabs */
+.leave-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.leave-tabs button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 25px;
+  background: #e9ecef;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.leave-tabs button:hover {
+  background: #dee2e6;
+}
+
+.leave-tabs button.active {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+/* Leave Card */
+.leave-card-wrapper {
+  width: 650px;
+  background: #ffffff;
+  border: 1px solid #bdbdbd;
+  border-radius: 8px;
+
+  overflow-x: visible;
+
+}
+
+/* Card Heading */
+.leave-card-heading {
+  background: #f1f3f5;
+  padding: 14px 20px;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* Card Body */
+.leave-card {
+  padding: 20px;
+}
+
+/* Form */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.form-group select,
+.form-group input,
+.form-group textarea {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  outline: none;
+  font-size: 14px;
+}
+
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: #1976d2;
+}
+
+/* Date Row */
+.date-row {
+  display: flex;
+  gap: 20px;
+}
+
+/* Buttons */
+.btn-group {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+}
+
+.apply-btn {
+  background: #1976d2;
+  color: white;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.apply-btn:hover {
+  background: #1565c0;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+/* History Card */
+.history-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #767676;
+ overflow: visible; 
+}
+
+/* Header */
+
+.history-card-head {
+  text-align: left;
+}
+
+/* Wrap content inside flex */
+.history-card-head .header-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.history-card-head .header-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Leave Count Pills */
+.leave-count {
+  padding: 7px 15px;
+  border-radius: 20px;
+  font-size: 12px;
+  color: white;
+  font-weight: 500;
+}
+
+.paid {
+  background: #28a745;
+}
+
+.unpaid {
+  background: #dc3545;
+}
+
+.total {
+  background: #007bff;
+}
+
+/* Table */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table thead {
+  background: #f1f3f5;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.history-table td {
+  padding: 12px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+/* Zebra Rows */
+.history-table tbody tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+/* Hover Effect */
+.history-table tbody tr:hover {
+  background: #eef5ff;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge.approved {
+  background: #198754;
+  color: white;
+}
+
+.status-badge.pending {
+  background: #ffc107;
+  color: #000;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .leave-card-wrapper {
+    width: 100%;
+  }
+
+  .date-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .history-card-head {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+/* ===== MOBILE ONLY ===== */
+@media (max-width: 768px) {
+
+  .history-card {
+    max-height: 70vh;
+    overflow: auto;
+    position: relative;
+  }
+
+  .history-table {
+    min-width: 700px;
+  }
+
+  .history-card-head {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #f8f9fa; /* keep original color */
+  }
+
+  .history-table th:first-child,
+  .history-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    background: #fff;
+  }
+
+  .history-table thead th:first-child {
+    z-index: 120;
+  }
+
+}

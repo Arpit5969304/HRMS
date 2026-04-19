@@ -1,0 +1,291 @@
+/* ===== PAGE ===== */
+.att-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+/* ===== HEADER ===== */
+.att-header h4 {
+  margin-bottom: 5px;
+}
+
+.att-header p {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* ===== FILTER BAR ===== */
+.att-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.att-filter-bar select,
+.att-filter-bar input {
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .att-filter-bar select,
+  .att-filter-bar input {
+    flex: 1 1 48%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .att-filter-bar {
+    flex-direction: column;
+  }
+
+  .att-filter-bar select,
+  .att-filter-bar input {
+    width: 100%;
+  }
+}
+
+/* ===== KPI ===== */
+.att-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.att-kpi-card {
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.att-kpi-card.success {
+  background: #e6f4ea;
+}
+.att-kpi-card.warning {
+  background: #fff4e5;
+}
+.att-kpi-card.danger {
+  background: #fdecea;
+}
+
+/* ===== TABLE WRAPPER ===== */
+
+.att-table-wrapper {
+  width: 100%;
+  overflow: hidden; /* 🔥 only container, no scroll here */
+}
+
+.att-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.att-table-wrapper th,
+.att-table-wrapper td {
+  white-space: nowrap;
+}
+
+/* ===== SCROLL ===== */
+.att-table-scroll,
+.att-responsive-daywise {
+  width: 100%;
+  overflow-x: auto !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 65vh;
+}
+
+/* ===== TABLE BASE ===== */
+.att-modern-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.att-modern-table thead {
+  background: #f9fafb;
+}
+
+.att-modern-table th,
+.att-modern-table td {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.att-modern-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ===== EMPLOYEE ===== */
+.att-emp-name {
+  white-space: nowrap;
+  font-weight: 600;
+  color: #111827;
+  display: block;
+  padding-left: 10px;
+  font-size: 14px;
+}
+
+/* ===== BADGE ===== */
+.att-modern-table .badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge.success {
+  background: #198754;
+  color: #fff;
+}
+
+.badge.danger {
+  background: #dc3545;
+  color: #fff;
+}
+
+.badge.secondary {
+  background: #6c757d;
+  color: #fff;
+}
+
+/* ===== DAYWISE TABLE ===== */
+.att-daywise-table {
+  width: max-content; /* ✅ container ke andar rahe */
+  min-width: 1200px; /* ✅ scroll trigger */
+  table-layout: fixed;
+  border-collapse: separate;
+}
+
+.att-daywise-table th,
+.att-daywise-table td {
+  white-space: nowrap;
+  text-align: center;
+  vertical-align: middle;
+  padding: 10px 6px;
+}
+
+/* ===== STICKY HEADER ===== */
+.att-sticky-header th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  z-index: 5;
+}
+
+/* ===== STICKY COLUMN ===== */
+.att-sticky-col {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  z-index: 6;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+}
+
+.att-sticky-header th.att-sticky-col {
+  z-index: 7;
+}
+
+/* ===== EMPLOYEE COLUMN ===== */
+.att-daywise-table th:first-child,
+.att-daywise-table td:first-child {
+  min-width: 150px;
+  width: 150px;
+  text-align: left;
+}
+
+/* ===== DATE CELLS ===== */
+.att-daywise-table th:not(:first-child):not(:nth-last-child(-n + 2)),
+.att-daywise-table td:not(:first-child):not(:nth-last-child(-n + 2)) {
+  width: 32px;
+}
+
+/* ===== TOTAL COLUMNS ===== */
+.att-daywise-table th:nth-last-child(2),
+.att-daywise-table td:nth-last-child(2),
+.att-daywise-table th:last-child,
+.att-daywise-table td:last-child {
+  width: 70px;
+  font-weight: 700;
+}
+
+/* ===== BADGE SIZE ===== */
+.att-daywise-table .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  font-size: 11px;
+  padding: 0;
+  border-radius: 4px;
+}
+
+/* ===== SCROLLBAR ===== */
+.att-table-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.att-table-scroll {
+  display: block;   /* 🔥 ensure proper scroll container */
+}
+
+.att-table-scroll::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* ===== EMPTY ===== */
+.att-empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .att-daywise-table {
+    min-width: 900px;
+  }
+
+  .att-daywise-table th:first-child,
+  .att-daywise-table td:first-child {
+    min-width: 140px;
+  }
+
+  .att-daywise-table th,
+  .att-daywise-table td {
+    font-size: 11px;
+    padding: 6px 4px;
+  }
+
+  .att-emp-name {
+    font-size: 12px;
+  }
+}
+
+/* ===== SMALL MOBILE ===== */
+@media (max-width: 480px) {
+  .att-daywise-table {
+    min-width: 800px;
+  }
+
+  .att-daywise-table th:first-child,
+  .att-daywise-table td:first-child {
+    min-width: 130px;
+  }
+
+  .att-daywise-table th,
+  .att-daywise-table td {
+    padding: 5px 3px;
+  }
+}
+
+

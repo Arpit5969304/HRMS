@@ -1,0 +1,79 @@
+/* ===== Layout ===== */
+.dashboard {
+  display: flex;
+  height: 100vh;
+  overflow-x: hidden;   /* ✅ FIX */
+}
+
+/* ===== Sidebar (BASE) ===== */
+.sidebar {
+  width: 250px;
+  height: 100%;
+  background: linear-gradient(90deg, #3870b4, #2f5cbe);
+  color: white;
+  transition: all 0.3s ease;
+  overflow-y: auto;
+}
+
+/* ===== DESKTOP (Push Mode) 💻 ===== */
+@media (min-width: 769px) {
+  .sidebar {
+    position: relative;
+    transform: translateX(0);
+  }
+
+  .sidebar.closed {
+    width: 0;
+    overflow: hidden;   /* ✅ FIX */
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow-x: hidden;   /* ✅ FIX */
+  }
+}
+
+/* ===== MOBILE (Overlay Mode) 📱 ===== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    z-index: 1000;
+    transform: translateX(-100%);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* ===== Content ===== */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;   /* ✅ FIX */
+  padding: 10px;
+  background: #dfe6ef;
+}
+
+/* ===== Overlay ===== */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  z-index: 999;
+}
+
+/* ===== GLOBAL SAFETY (IMPORTANT) ===== */
+body {
+  overflow-x: hidden;   /* ✅ EXTRA SAFETY */
+}
