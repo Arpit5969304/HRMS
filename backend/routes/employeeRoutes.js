@@ -1,4 +1,5 @@
 import express from "express";
+import upload from "../middleware/upload.js";
 
 import {
   createEmployee,
@@ -13,7 +14,7 @@ import { protect, adminOnly } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 // ➤ CREATE EMPLOYEE (Admin only)
-router.post("/", protect, adminOnly, createEmployee);
+router.post("/", protect, upload.single("profileImage"),adminOnly, createEmployee);
 
 // ➤ GET ALL EMPLOYEES
 router.get("/", protect, getEmployees);
@@ -27,7 +28,7 @@ router.get("/me", protect, (req, res) => {
 router.get("/:id", protect, getEmployeeById);
 
 // ➤ UPDATE EMPLOYEE (Admin only)
-router.put("/:id", protect, adminOnly, updateEmployee);
+router.put("/:id", protect, adminOnly,upload.single("profileImage"),updateEmployee);
 
 // ➤ DELETE EMPLOYEE (Admin only)
 router.delete("/:id", protect, adminOnly, deleteEmployee);

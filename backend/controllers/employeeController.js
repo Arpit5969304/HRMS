@@ -52,7 +52,7 @@ export const createEmployee = async (req, res) => {
     /* ========= MANAGER VALIDATION ========= */
     let managerId = null;
 
-    if (data.manager) {
+    if (data.role !== "Admin" && data.manager) {
       if (!mongoose.Types.ObjectId.isValid(data.manager)) {
         return res.status(400).json({ message: "Invalid manager ID" });
       }
@@ -63,7 +63,6 @@ export const createEmployee = async (req, res) => {
         return res.status(400).json({ message: "Manager not found" });
       }
 
-      // ❌ Admin cannot be manager
       if (managerExists.role === "Admin") {
         return res.status(400).json({
           message: "Admin cannot be assigned as manager",
@@ -86,7 +85,6 @@ export const createEmployee = async (req, res) => {
       phone: data.phone?.trim(),
       address: data.address?.trim(),
 
-      // ✅ ADD THIS (missing tha)
       gender: data.gender,
 
       department: data.department?.trim(),
@@ -97,11 +95,10 @@ export const createEmployee = async (req, res) => {
 
       manager: managerId,
 
-      // ✅ ADD THIS (important)
       employmentType: data.employmentType,
 
-      // ✅ IMAGE (optional)
-      profileImage: data.profileImage || "",
+      // 🔥 IMAGE FIX
+      profileImage: req.file ? req.file.path : "",
 
       joinDate: data.joinDate ? new Date(data.joinDate) : undefined,
       dob: data.dob ? new Date(data.dob) : undefined,
@@ -118,29 +115,16 @@ export const createEmployee = async (req, res) => {
 };
 
 /* ==============================
-   ➤ GET ALL EMPLOYEES (PAGINATION)
+   ➤ GET ALL EMPLOYEES
 ============================== */
 export const getEmployees = async (req, res) => {
   try {
-    const page = Number(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
-
     const employees = await Employee.find()
       .select("-password")
       .populate("manager", "firstName lastName employeeId")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
+      .sort({ createdAt: -1 });
 
-    const total = await Employee.countDocuments();
-
-    res.json({
-      total,
-      page,
-      pages: Math.ceil(total / limit),
-      data: employees,
-    });
+    res.json(employees);
   } catch (error) {
     console.error("GET ALL ERROR:", error);
     res.status(500).json({ message: "Server Error" });
@@ -180,26 +164,21 @@ export const getEmployeeById = async (req, res) => {
 /* ==============================
    ➤ UPDATE EMPLOYEE
 ============================== */
-
-
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
 
-    // ✅ ID VALIDATION
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    // ✅ ACCESS CONTROL
     if (req.user.role !== "Admin" && req.user._id.toString() !== id) {
       return res.status(403).json({ message: "Access denied" });
     }
 
     const updateData = {};
 
-    // ✅ BASIC FIELDS
     if (data.firstName !== undefined)
       updateData.firstName = data.firstName.trim();
 
@@ -219,17 +198,16 @@ export const updateEmployee = async (req, res) => {
       updateData.designation = data.designation.trim();
 
     if (data.role !== undefined) updateData.role = data.role;
-
     if (data.status !== undefined) updateData.status = data.status;
 
-    // ✅ ADD MISSING FIELDS
     if (data.gender !== undefined) updateData.gender = data.gender;
-
     if (data.employmentType !== undefined)
       updateData.employmentType = data.employmentType;
 
-    if (data.profileImage !== undefined)
-      updateData.profileImage = data.profileImage;
+    /* ========= IMAGE UPDATE ========= */
+    if (req.file) {
+      updateData.profileImage = req.file.filename;
+    }
 
     /* ========= EMAIL ========= */
     if (data.email) {
@@ -256,48 +234,35 @@ export const updateEmployee = async (req, res) => {
       updateData.password = await bcrypt.hash(data.password, 10);
     }
 
-    /* ========= DATES ========= */
-    if (data.joinDate) updateData.joinDate = new Date(data.joinDate);
-    if (data.dob) updateData.dob = new Date(data.dob);
-
-    /* ========= ROLE BASED MANAGER LOGIC ========= */
-
-    // 🔥 IF ADMIN → REMOVE MANAGER
+    /* ========= MANAGER ========= */
     if (data.role === "Admin") {
       updateData.manager = null;
-    } else {
-      // NORMAL MANAGER FLOW
-      if (data.manager === "") {
-        updateData.manager = null;
-      } else if (data.manager) {
-        if (!mongoose.Types.ObjectId.isValid(data.manager)) {
-          return res.status(400).json({ message: "Invalid manager ID" });
-        }
-
-        if (data.manager === id) {
-          return res.status(400).json({
-            message: "Employee cannot be their own manager",
-          });
-        }
-
-        const managerExists = await Employee.findById(data.manager);
-
-        if (!managerExists) {
-          return res.status(400).json({ message: "Manager not found" });
-        }
-
-        // 🔥 IMPORTANT RULE
-        if (managerExists.role === "Admin") {
-          return res.status(400).json({
-            message: "Admin cannot be manager",
-          });
-        }
-
-        updateData.manager = data.manager;
+    } else if (data.manager) {
+      if (!mongoose.Types.ObjectId.isValid(data.manager)) {
+        return res.status(400).json({ message: "Invalid manager ID" });
       }
+
+      if (data.manager === id) {
+        return res.status(400).json({
+          message: "Employee cannot be their own manager",
+        });
+      }
+
+      const managerExists = await Employee.findById(data.manager);
+
+      if (!managerExists) {
+        return res.status(400).json({ message: "Manager not found" });
+      }
+
+      if (managerExists.role === "Admin") {
+        return res.status(400).json({
+          message: "Admin cannot be manager",
+        });
+      }
+
+      updateData.manager = data.manager;
     }
 
-    // ✅ UPDATE
     const updated = await Employee.findByIdAndUpdate(id, updateData, {
       new: true,
     })
@@ -314,9 +279,6 @@ export const updateEmployee = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
-
-
 
 /* ==============================
    ➤ DELETE EMPLOYEE
@@ -335,7 +297,6 @@ export const deleteEmployee = async (req, res) => {
       });
     }
 
-    // 🔥 Remove manager reference from others
     await Employee.updateMany({ manager: id }, { $set: { manager: null } });
 
     const deleted = await Employee.findByIdAndDelete(id);

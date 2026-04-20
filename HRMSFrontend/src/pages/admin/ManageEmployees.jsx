@@ -34,6 +34,7 @@ const ManageEmployees = () => {
   const [searchEmployee, setSearchEmployee] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // ✅ generate department list dynamically
   const departments = [
@@ -82,10 +83,6 @@ const ManageEmployees = () => {
     if (!formData.designation.trim())
       newErrors.designation = "Designation is required";
 
-    if (formData.role !== "Admin" && !formData.manager.trim()) {
-      newErrors.manager = "Manager is required";
-    }
-
     if (!formData.address.trim()) newErrors.address = "Address is required";
 
     if (!formData.email.trim()) newErrors.email = "Email is required";
@@ -101,8 +98,6 @@ const ManageEmployees = () => {
       newErrors.password = "Password must be at least 6 characters";
 
     if (!formData.role) newErrors.role = "Role is required";
-
-
 
     if (!formData.agree) newErrors.agree = "You must accept terms";
 
@@ -120,11 +115,19 @@ const ManageEmployees = () => {
     if (!validate()) return;
 
     try {
-      const payload = {
-        ...formData,
-      };
+      const data = new FormData();
 
-      await createEmployee(payload);
+      // 🔥 append all fields
+      Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+      });
+
+      // 🔥 append image (IMPORTANT)
+      if (selectedFile) {
+        data.append("profileImage", selectedFile);
+      }
+
+      await createEmployee(data);
 
       alert("✅ Employee Created");
       setFormData(initialState);
@@ -416,7 +419,8 @@ const ManageEmployees = () => {
                     >
                       <option value="">Select Manager</option>
 
-                      {employees.filter((emp) => emp.role && emp.role !== "Admin")
+                      {employees
+                        .filter((emp) => emp.role && emp.role !== "Admin")
                         .map((emp) => (
                           <option key={emp._id} value={emp._id}>
                             {emp.firstName} {emp.lastName}
@@ -430,9 +434,6 @@ const ManageEmployees = () => {
                   )}
                 </div>
               )}
-
-              {/* Employee ID */}
-            
 
               {/* Employment Type */}
               <div className="field-wrapper">
@@ -467,6 +468,20 @@ const ManageEmployees = () => {
                     <option value="inactive">Inactive</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="field-wrapper">
+                <div className="input-group-m">
+                  <span className="input-addon">profile Image</span>
+
+                  <input
+                    type="file"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                  />
+                </div>
+                {errors.image && (
+                  <small className="error">{errors.image}</small>
+                )}
               </div>
             </div>
 

@@ -22,9 +22,9 @@ const findEmployee = async (input) => {
 ============================== */
 export const saveSalary = async (req, res) => {
   try {
-    const { employeeId, salary } = req.body;
+    const { employeeId, ...salary } = req.body; // 🔥 FIX
 
-    if (!employeeId || !salary) {
+    if (!employeeId) {
       return res.status(400).json({
         message: "Employee and salary data required",
       });
@@ -38,18 +38,18 @@ export const saveSalary = async (req, res) => {
       });
     }
 
-    // ✅ Validate fields
     const fields = ["basic", "hra", "conveyance", "medical", "lta", "special"];
 
     for (let field of fields) {
-      if (salary[field] == null || isNaN(salary[field])) {
+      salary[field] = Number(salary[field]); // 🔥 FIX
+
+      if (isNaN(salary[field])) {
         return res.status(400).json({
           message: `${field} must be a valid number`,
         });
       }
     }
 
-    // ✅ Save / Update main salary
     let existing = await Salary.findOne({ employee: employee._id });
 
     if (existing) {
@@ -62,11 +62,9 @@ export const saveSalary = async (req, res) => {
       });
     }
 
-    // ✅ Current month/year
     const month = new Date().getMonth() + 1;
     const year = new Date().getFullYear();
 
-    // ✅ Prevent duplicate history
     await SalaryHistory.findOneAndUpdate(
       { employee: employee._id, month, year },
       {
@@ -110,7 +108,9 @@ export const applyIncrement = async (req, res) => {
       });
     }
 
-    if (isNaN(amount) || Number(amount) <= 0) {
+    const incAmount = Number(amount); // 🔥 FIX
+
+    if (isNaN(incAmount) || incAmount <= 0) {
       return res.status(400).json({
         message: "Invalid increment amount",
       });
@@ -124,19 +124,16 @@ export const applyIncrement = async (req, res) => {
       });
     }
 
-    // ✅ Apply increment
-    salary.basic += Number(amount);
+    salary.basic += incAmount;
     await salary.save();
 
-    // ✅ Save increment history
     await Increment.create({
       employee: employee._id,
-      amount: Number(amount),
+      amount: incAmount,
       remarks: remarks?.trim(),
       createdBy: req.user._id,
     });
 
-    // ✅ ALSO update salary history
     const month = new Date().getMonth() + 1;
     const year = new Date().getFullYear();
 
@@ -168,7 +165,6 @@ export const applyIncrement = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
-
 /* ==============================
    ➤ GET SALARY HISTORY
 ============================== */
@@ -202,10 +198,23 @@ export const getSalaryHistory = async (req, res) => {
 /* ==============================
    ➤ GET INCREMENT HISTORY
 ============================== */
+
 export const getIncrementHistory = async (req, res) => {
   try {
+    let employee;
+
+    if (req.params.employeeId) {
+      employee = await findEmployee(req.params.employeeId);
+    } else {
+      employee = req.user;
+    }
+
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
     const history = await Increment.find({
-      employee: req.user._id,
+      employee: employee._id,
     }).sort({ createdAt: -1 });
 
     res.json(history);

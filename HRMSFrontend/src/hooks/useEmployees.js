@@ -17,9 +17,20 @@ const useEmployees = () => {
   };
 
   const createEmployee = async (data) => {
-    await API.post("/employees", data);
-    console.log("data",data);
-    fetchEmployees(); // auto refresh
+    try {
+      const isFormData = data instanceof FormData;
+
+      await API.post("/employees", data, {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+      });
+
+      fetchEmployees();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
 
   const deleteEmployee = async (id) => {
@@ -28,8 +39,20 @@ const useEmployees = () => {
   };
 
   const updateEmployee = async (id, data) => {
-    await API.put(`/employees/${id}`, data);
-    fetchEmployees();
+    try {
+      const isFormData = data instanceof FormData;
+
+      await API.put(`/employees/${id}`, data, {
+        headers: isFormData
+          ? { "Content-Type": "multipart/form-data" }
+          : { "Content-Type": "application/json" },
+      });
+
+      fetchEmployees();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
   };
 
   useEffect(() => {
