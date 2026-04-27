@@ -2,8 +2,10 @@ import express from "express";
 import {
   saveSalary,
   applyIncrement,
+  getCurrentSalary,
   getSalaryHistory,
   getIncrementHistory,
+  getMySalary, // 🔥 ADD THIS
 } from "../controllers/salaryController.js";
 
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
@@ -21,23 +23,25 @@ router.post("/save", protect, adminOnly, saveSalary);
 router.post("/increment", protect, adminOnly, applyIncrement);
 
 /* ==============================
+   ➤ GET CURRENT SALARY (Admin)
+============================== */
+router.get("/admin/current/:employeeId", protect, adminOnly, getCurrentSalary);
+
+/* ==============================
+   ➤ GET MY SALARY (Employee) 🔥
+============================== */
+router.get("/my", protect, getMySalary);
+
+/* ==============================
    ➤ GET SALARY HISTORY
 ============================== */
-
-// ✅ Admin view
 router.get("/admin/:employeeId", protect, adminOnly, getSalaryHistory);
-
-// ✅ Employee own
 router.get("/me/history", protect, getSalaryHistory);
 
 /* ==============================
    ➤ GET INCREMENT HISTORY
 ============================== */
-
-// ✅ Admin view
 router.get("/admin/increment/:employeeId", protect, adminOnly, getIncrementHistory);
-
-// ✅ Employee own
 router.get("/me/increment", protect, getIncrementHistory);
 
 export default router;

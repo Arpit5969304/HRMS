@@ -1,43 +1,43 @@
 /* ===== MOBILE FIX (PRODUCTION LEVEL) ===== */
 @media (max-width: 768px) {
   /* ===== HEADER FILTER AREA ===== */
-  .card-header {
+  .admin-document-verify-page .card-header {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px;
   }
 
-  .card-header h5 {
+  .admin-document-verify-page .card-header h5 {
     font-size: 16px;
   }
 
   /* Filter + search full width */
-  .card-header select,
-  .card-header input {
+  .admin-document-verify-page .card-header select,
+  .admin-document-verify-page .card-header input {
     width: 100%;
     height: 40px;
     font-size: 14px;
   }
 
   /* Stack filter & search nicely */
-  .card-header .d-flex {
+  .admin-document-verify-page .card-header .d-flex {
     flex-direction: column !important;
     gap: 10px;
     width: 100%;
   }
 
   /* ===== TABLE ===== */
-  .table-responsive {
+  .admin-document-verify-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .table {
+  .admin-document-verify-page .table {
     min-width: 750px;
   }
 
-  .table th,
-  .table td {
+  .admin-document-verify-page .table th,
+  .admin-document-verify-page .table td {
     white-space: nowrap;
     font-size: 13px;
     padding: 10px;
@@ -45,20 +45,20 @@
 
   /* ===== ACTION BUTTONS ===== */
   /* ===== ACTION BUTTONS ===== */
-  td.d-flex {
+  .admin-document-verify-page td.d-flex {
     flex-direction: column;
     gap: 6px;
     align-items: flex-start; /* 🔥 important */
   }
 
-  td.d-flex .btn {
+  .admin-document-verify-page td.d-flex .btn {
     width: auto !important; /* 🔥 auto size */
     display: inline-block;
     font-size: 13px;
     padding: 6px 10px;
     white-space: nowrap;
   }
-  .row {
+  .admin-document-verify-page .row {
     --bs-gutter-x: 0 !important;
     --bs-gutter-y: 0 !important;
     margin-left: 0 !important;
@@ -66,13 +66,14 @@
   }
 
   /* Remove container padding */
-  .container,
-  .container-fluid,
-  .container-sm,
-  .container-md,
-  .container-lg,
-  .container-xl,
-  .container-xxl {
+  .admin-document-verify-page.container,
+  .admin-document-verify-page .container,
+  .admin-document-verify-page .container-fluid,
+  .admin-document-verify-page .container-sm,
+  .admin-document-verify-page .container-md,
+  .admin-document-verify-page .container-lg,
+  .admin-document-verify-page .container-xl,
+  .admin-document-verify-page .container-xxl {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -80,36 +81,36 @@
 
 /* ===== SMALL MOBILE ===== */
 @media (max-width: 480px) {
-  .card {
+  .admin-document-verify-page .card {
     padding: 10px;
   }
 
-  .card-header h5 {
+  .admin-document-verify-page .card-header h5 {
     font-size: 15px;
   }
 
-  .table th,
-  .table td {
+  .admin-document-verify-page .table th,
+  .admin-document-verify-page .table td {
     font-size: 12px;
     padding: 8px;
   }
 
-  td.d-flex .btn {
+  .admin-document-verify-page td.d-flex .btn {
     font-size: 12px;
     padding: 5px;
   }
 
-  td.d-flex {
+  .admin-document-verify-page td.d-flex {
     align-items: flex-start;
   }
 
-  td.d-flex .btn {
+  .admin-document-verify-page td.d-flex .btn {
     width: auto !important;
     font-size: 12px;
     padding: 5px 8px;
   }
 
-  .row {
+  .admin-document-verify-page .row {
     --bs-gutter-x: 0 !important;
     --bs-gutter-y: 0 !important;
     margin-left: 0 !important;
@@ -117,13 +118,14 @@
   }
 
   /* Remove container padding */
-  .container,
-  .container-fluid,
-  .container-sm,
-  .container-md,
-  .container-lg,
-  .container-xl,
-  .container-xxl {
+  .admin-document-verify-page.container,
+  .admin-document-verify-page .container,
+  .admin-document-verify-page .container-fluid,
+  .admin-document-verify-page .container-sm,
+  .admin-document-verify-page .container-md,
+  .admin-document-verify-page .container-lg,
+  .admin-document-verify-page .container-xl,
+  .admin-document-verify-page .container-xxl {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }

@@ -25,6 +25,6 @@ router.put("/:id", protect, adminOnly, updateHoliday);
 router.delete("/:id", protect, adminOnly, deleteHoliday);
 
 // ➤ APPROVE / TOGGLE (Admin only)
-router.patch("/approve/:id", protect, adminOnly, toggleApproveHoliday);
+router.patch("/:id/approve", protect, adminOnly, toggleApproveHoliday);
 
 export default router;

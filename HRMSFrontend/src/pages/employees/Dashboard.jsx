@@ -1,109 +1,66 @@
 import "../../assets/styles/dashboard.css";
 import TodayBirthdayCard from "../../components/TodayBirthdayCard";
+import useDashboard from "../../hooks/useDashboard";
+import { useAuth } from "../../context/AuthContext";
 
 const Dashboard = () => {
-  const employees = [
-    {
-      id: 1,
-      name: "Kritika Sharma",
-      dob: "1998-03-16",
-      joiningDate: "2020-03-16",
-    },
-    {
-      id: 2,
-      name: "Rahul Verma",
-      dob: "1995-03-01",
-      joiningDate: "2019-03-01",
-    },
-    {
-      id: 3,
-      name: "Anjali Mehta",
-      dob: "1997-03-20",
-      joiningDate: "2021-03-20",
-    },
-    {
-      id: 4,
-      name: "Rohit Singh",
-      dob: "1996-04-10",
-      joiningDate: "2018-04-10",
-    },
-    {
-      id: 5,
-      name: "Priya Kapoor",
-      dob: "1999-04-22",
-      joiningDate: "2022-04-22",
-    },
-    {
-      id: 6,
-      name: "Amit Shah",
-      dob: "1994-03-10",
-      joiningDate: "2017-03-10",
-    },
-    {
-      id: 7,
-      name: "Neha Gupta",
-      dob: "1993-04-01",
-      joiningDate: "2016-04-01",
-    },
-    {
-      id: 8,
-      name: "Vikas Yadav",
-      dob: "1992-04-15",
-      joiningDate: "2015-04-15",
-    },
-  ];
+  const { data, loading } = useDashboard();
+  const { user } = useAuth();
+
+  const employees = data.employees || [];
+  const attendance = data.attendance || [];
+  const leaves = data.leaves || [];
+  const holidays = data.holidays || [];
+
+  console.log("EMPLOYEES:", employees);
+
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-  const upcomingBirthdays = employees
-    .map((emp) => {
-      const dob = new Date(emp.dob);
-      let nextBirthday = new Date(
-        today.getFullYear(),
-        dob.getMonth(),
-        dob.getDate(),
-      );
-
-      if (nextBirthday < today) {
-        nextBirthday.setFullYear(today.getFullYear() + 1);
-      }
-
-      const diffDays = Math.ceil(
-        (nextBirthday - today) / (1000 * 60 * 60 * 24),
-      );
-
-      return { ...emp, nextBirthday, daysLeft: diffDays };
-    })
-    .filter((emp) => emp.daysLeft <= 30)
-    .sort((a, b) => a.daysLeft - b.daysLeft);
-
-  const anniversaries = employees.filter((emp) => {
-    const join = new Date(emp.joiningDate);
-    return (
-      join.getMonth() === today.getMonth() && join.getDate() === today.getDate()
-    );
-  });
-
-  const holidays = [
-    { name: "Holi", date: "2026-03-04" },
-    { name: "Independence Day", date: "2026-08-15" },
-  ];
-
-  const upcomingHolidays = holidays.filter(
-    (holiday) => new Date(holiday.date) >= today,
-  );
-
+  // ✅ DATE FORMATTER
   const formatDate = (date) =>
     new Date(date).toLocaleDateString("en-IN", {
       day: "numeric",
       month: "long",
     });
 
+  // 🔥 ✅ FIXED BIRTHDAYS (MATCH ADMIN LOGIC)
+  const upcomingBirthdays = employees
+    .filter((emp) => emp.dob)
+    .slice(0, 5)
+    .map((emp) => ({
+      ...emp,
+      nextBirthday: new Date(emp.dob),
+    }));
+
+  // ✅ ANNIVERSARY (FIXED FIELD)
+  const anniversaries = employees.filter((emp) => {
+    if (!emp.joinDate) return false;
+
+    const join = new Date(emp.joinDate);
+
+    return (
+      join.getDate() === today.getDate() &&
+      join.getMonth() === today.getMonth()
+    );
+  });
+
+  // ✅ HOLIDAYS
+  const upcomingHolidays = holidays.filter(
+    (holiday) => new Date(holiday.date) >= today
+  );
+
+  if (loading) {
+    return <div className="container-fluid">Loading...</div>;
+  }
+
   return (
     <div className="dashboard-page container-fluid">
-      {/* Welcome */}
       <div className="dashboard-card d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div className="welcome-section">
-          <h2 className="mb-1">Welcome Kritika Sharma</h2>
+          <h2 className="mb-1">
+            Welcome {user?.firstName} {user?.lastName}
+          </h2>
           <p className="mb-0 text-muted">Let's Make Today Productive</p>
         </div>
 
@@ -124,7 +81,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Cards */}
       <div className="row g-4 mt-2">
         {/* Birthdays */}
         <div className="col-12 col-sm-6 col-lg-4">
@@ -133,13 +89,15 @@ const Dashboard = () => {
             <div className="card-body-list">
               {upcomingBirthdays.length > 0 ? (
                 upcomingBirthdays.map((emp) => (
-                  <div key={emp.id} className="list-item">
-                    <span>{emp.name}</span>
+                  <div key={emp._id} className="list-item">
+                    <span>
+                      {emp.firstName} {emp.lastName}
+                    </span>
                     <span>{formatDate(emp.nextBirthday)}</span>
                   </div>
                 ))
               ) : (
-                <p>No upcoming birthdays</p>
+                <p>No birthdays</p>
               )}
             </div>
           </div>
@@ -152,9 +110,11 @@ const Dashboard = () => {
             <div className="card-body-list">
               {anniversaries.length > 0 ? (
                 anniversaries.map((emp) => (
-                  <div key={emp.id} className="list-item">
-                    <span>{emp.name}</span>
-                    <span>{formatDate(emp.joiningDate)}</span>
+                  <div key={emp._id} className="list-item">
+                    <span>
+                      {emp.firstName} {emp.lastName}
+                    </span>
+                    <span>{formatDate(emp.joinDate)}</span>
                   </div>
                 ))
               ) : (

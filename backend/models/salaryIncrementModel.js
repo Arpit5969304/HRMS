@@ -15,6 +15,16 @@ const incrementSchema = new mongoose.Schema(
       min: [1, "Increment must be greater than 0"],
     },
 
+    previousBasic: {
+      type: Number,
+      min: 0,
+    },
+
+    newBasic: {
+      type: Number,
+      min: 0,
+    },
+
     remarks: {
       type: String,
       trim: true,

@@ -1,15 +1,18 @@
 .leave-container {
   width: 100%;
-  overflow: visible !important;
+  min-width: 0;
+  overflow: hidden;
 }
 /* Tabs */
 .leave-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-bottom: 20px;
 }
 
 .leave-tabs button {
+  flex: 0 1 auto;
   padding: 10px 20px;
   border: none;
   border-radius: 25px;
@@ -30,12 +33,12 @@
 
 /* Leave Card */
 .leave-card-wrapper {
-  width: 650px;
+  width: min(100%, 650px);
   background: #ffffff;
   border: 1px solid #bdbdbd;
   border-radius: 8px;
 
-  overflow-x: visible;
+  overflow: hidden;
 
 }
 
@@ -87,14 +90,20 @@
   gap: 20px;
 }
 
+.date-row .form-group {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Buttons */
 .btn-group {
   margin-top: 15px;
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
-.apply-btn {
+.leave-container .apply-btn {
   background: #1976d2;
   color: white;
   padding: 8px 18px;
@@ -103,11 +112,11 @@
   cursor: pointer;
 }
 
-.apply-btn:hover {
+.leave-container .apply-btn:hover {
   background: #1565c0;
 }
 
-.cancel-btn {
+.leave-container .cancel-btn {
   background: #6c757d;
   color: white;
   padding: 8px 18px;
@@ -116,7 +125,7 @@
   cursor: pointer;
 }
 
-.cancel-btn:hover {
+.leave-container .cancel-btn:hover {
   background: #5a6268;
 }
 
@@ -125,7 +134,7 @@
   background: #ffffff;
   border-radius: 8px;
   border: 1px solid #767676;
- overflow: visible; 
+  overflow: hidden;
 }
 
 /* Header */
@@ -172,6 +181,7 @@
 /* Table */
 .history-table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
 }
 
@@ -234,6 +244,11 @@
     flex-wrap: wrap;
     gap: 8px;
   }
+
+  .leave-tabs button,
+  .btn-group button {
+    flex: 1 1 140px;
+  }
 }
 
 /* ===== MOBILE ONLY ===== */
@@ -268,4 +283,21 @@
     z-index: 120;
   }
 
+}
+
+@media (max-width: 480px) {
+  .leave-tabs {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .leave-card,
+  .leave-card-heading {
+    padding: 14px;
+  }
+
+  .btn-group {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
 }

@@ -3,30 +3,35 @@ import {
   getRemarks,
   updateRemark,
   approveRemarks,
+  getEmployeeRemarks,
+  addReason, // 🔥 IMPORTANT ADD THIS
 } from "../controllers/remarkController.js";
 
-// 🔥 ADD THIS
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /* ==============================
-   ➤ GET REMARKS
+   🔥 ADMIN ROUTES
 ============================== */
-// 👉 Admin → all
-// 👉 Employee → only own (handle in controller)
-router.get("/", protect, getRemarks);
+
+// 👉 GET all remarks (admin dashboard)
+router.get("/admin", protect, adminOnly, getRemarks);
+
+// 👉 UPDATE remark (admin only)
+router.put("/admin/:id", protect, adminOnly, updateRemark);
+
+// 👉 APPROVE remarks (bulk)
+router.post("/admin/approve", protect, adminOnly, approveRemarks);
 
 /* ==============================
-   ➤ UPDATE REMARK
+   🔥 EMPLOYEE ROUTES
 ============================== */
-// 👉 Admin OR employee (own only)
-router.put("/:id", protect, updateRemark);
 
-/* ==============================
-   ➤ APPROVE REMARKS
-============================== */
-// 👉 Admin only
-router.post("/approve", protect, adminOnly, approveRemarks);
+// 👉 SUBMIT reason (employee)
+router.post("/employee/reason/:id", protect, addReason);
+
+// 👉 GET own remarks
+router.get("/employee/:employeeId", protect, getEmployeeRemarks);
 
 export default router;

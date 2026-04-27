@@ -12,18 +12,28 @@ import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ➤ CHECK-IN / CHECK-OUT (Employee)
+/* ==============================
+   🔥 EMPLOYEE ROUTES
+============================== */
+
+// ✅ CHECK-IN / CHECK-OUT
 router.post("/check-in", protect, checkIn);
 router.post("/check-out", protect, checkOut);
 
-// ➤ EMPLOYEE OWN DATA (SAFE 🔐)
+// ✅ GET OWN ATTENDANCE
 router.get("/me", protect, getEmployeeAttendance);
+
+// ✅ TODAY STATUS
 router.get("/today", protect, getTodayStatus);
 
-// ➤ ADMIN ONLY
+/* ==============================
+   🔥 ADMIN ROUTES
+============================== */
+
+// ✅ GET ALL
 router.get("/", protect, adminOnly, getAllAttendance);
 
-// ➤ DELETE (ADMIN)
+// ✅ DELETE (SOFT DELETE)
 router.delete("/:id", protect, adminOnly, deleteAttendance);
 
 export default router;

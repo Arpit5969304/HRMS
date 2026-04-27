@@ -29,7 +29,7 @@ const ManageEmployees = () => {
   const [errors, setErrors] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-
+  const [showPassword, setShowPassword] = useState(false);
   const [filter, setFilter] = useState("all");
   const [searchEmployee, setSearchEmployee] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
@@ -245,6 +245,7 @@ const ManageEmployees = () => {
                   <span className="input-addon">Date of Birth</span>
                   <input
                     type="date"
+                    max={new Date().toISOString().split("T")[0]}
                     name="dob"
                     value={formData.dob}
                     onChange={handleChange}
@@ -278,6 +279,7 @@ const ManageEmployees = () => {
                   <span className="input-addon">Join Date</span>
                   <input
                     type="date"
+                    max={new Date().toISOString().split("T")[0]}
                     name="joinDate"
                     value={formData.joinDate}
                     onChange={handleChange}
@@ -308,13 +310,23 @@ const ManageEmployees = () => {
               <div className="field-wrapper">
                 <div className="input-group-m">
                   <span className="input-addon">Password</span>
+
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                   />
+
+                  <button
+                    type="button"
+                    className="eye-btn"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? "🙈" : "👁️"}
+                  </button>
                 </div>
+
                 {errors.password && (
                   <small className="error">{errors.password}</small>
                 )}

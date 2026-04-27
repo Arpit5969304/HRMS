@@ -20,31 +20,19 @@ const findEmployee = async (input) => {
 ============================== */
 export const applyLeave = async (req, res) => {
   try {
-    const { employeeId, leaveType, fromDate, toDate, reason } = req.body;
+    const { leaveType, fromDate, toDate, reason } = req.body;
 
-    if (!employeeId || !leaveType || !fromDate || !toDate) {
+    if (!leaveType || !fromDate || !toDate) {
       return res.status(400).json({
         message: "All required fields must be filled",
       });
     }
 
-    const employee = await findEmployee(employeeId);
+    const employee = await Employee.findById(req.user._id);
 
     if (!employee) {
       return res.status(404).json({
         message: "Employee not found",
-      });
-    }
-
-    const isOverlap = await Leave.checkOverlap(
-      employee._id,
-      new Date(fromDate),
-      new Date(toDate),
-    );
-
-    if (isOverlap) {
-      return res.status(400).json({
-        message: "Leave already exists for selected dates",
       });
     }
 
@@ -57,30 +45,23 @@ export const applyLeave = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // ❌ Past date
     if (start < today) {
       return res.status(400).json({
         message: "Leave cannot start in the past",
       });
     }
 
-    // ❌ Invalid range
     if (end < start) {
       return res.status(400).json({
         message: "Invalid date range",
       });
     }
 
-    // ❌ Duplicate leave check
-    const exists = await Leave.findOne({
-      employee: employee._id,
-      fromDate: start,
-      toDate: end,
-    });
+    const isOverlap = await Leave.checkOverlap(employee._id, start, end);
 
-    if (exists) {
+    if (isOverlap) {
       return res.status(400).json({
-        message: "Leave already applied for these dates",
+        message: "Leave already exists for selected dates",
       });
     }
 
@@ -90,7 +71,6 @@ export const applyLeave = async (req, res) => {
       fromDate: start,
       toDate: end,
       reason: reason?.trim(),
-      status: "Pending",
     });
 
     res.status(201).json({
@@ -108,13 +88,34 @@ export const applyLeave = async (req, res) => {
 ============================== */
 export const getAllLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find()
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const leaves = await Leave.find({ isActive: true })
       .populate("employee", "firstName lastName employeeId")
       .sort({ createdAt: -1 });
 
     res.json(leaves);
   } catch (error) {
     console.error("GET ALL LEAVE ERROR:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+/* ==============================
+   ➤ GET MY LEAVES (EMPLOYEE)
+============================== */
+export const getMyLeaves = async (req, res) => {
+  try {
+    const leaves = await Leave.find({
+      employee: req.user._id,
+      isActive: true,
+    }).sort({ createdAt: -1 });
+
+    res.json(leaves);
+  } catch (error) {
+    console.error("GET MY LEAVE ERROR:", error);
     res.status(500).json({ message: "Server Error" });
   }
 };
@@ -134,7 +135,6 @@ export const getEmployeeLeaves = async (req, res) => {
       });
     }
 
-    // 🔐 ACCESS CONTROL
     if (
       req.user.role !== "Admin" &&
       req.user._id.toString() !== employee._id.toString()
@@ -146,6 +146,7 @@ export const getEmployeeLeaves = async (req, res) => {
 
     const leaves = await Leave.find({
       employee: employee._id,
+      isActive: true,
     }).sort({ createdAt: -1 });
 
     res.json(leaves);
@@ -159,9 +160,15 @@ export const getEmployeeLeaves = async (req, res) => {
    ➤ UPDATE LEAVE STATUS (ADMIN)
 ============================== */
 export const updateLeaveStatus = async (req, res) => {
+
+  console.log("Updated:", res.data);
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, rejectionReason } = req.body;
+
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
@@ -175,13 +182,22 @@ export const updateLeaveStatus = async (req, res) => {
       });
     }
 
-    const leave = await Leave.findByIdAndUpdate(id, { status }, { new: true });
+    const leave = await Leave.findById(id);
 
     if (!leave) {
       return res.status(404).json({
         message: "Leave not found",
       });
     }
+
+    leave.status = status;
+    leave.approvedBy = req.user._id;
+
+    if (status === "Rejected") {
+      leave.rejectionReason = rejectionReason?.trim();
+    }
+
+    await leave.save();
 
     res.json({
       message: "Leave status updated",
@@ -194,7 +210,7 @@ export const updateLeaveStatus = async (req, res) => {
 };
 
 /* ==============================
-   ➤ DELETE LEAVE
+   ➤ DELETE LEAVE (SOFT DELETE)
 ============================== */
 export const deleteLeave = async (req, res) => {
   try {
@@ -214,7 +230,6 @@ export const deleteLeave = async (req, res) => {
       });
     }
 
-    // 🔐 ACCESS CONTROL
     if (
       req.user.role !== "Admin" &&
       req.user._id.toString() !== leave.employee.toString()
@@ -224,7 +239,9 @@ export const deleteLeave = async (req, res) => {
       });
     }
 
-    await leave.deleteOne();
+    // 🔥 SOFT DELETE
+    leave.isActive = false;
+    await leave.save();
 
     res.json({
       message: "Leave deleted successfully",

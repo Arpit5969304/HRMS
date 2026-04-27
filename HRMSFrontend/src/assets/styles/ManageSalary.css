@@ -1,13 +1,13 @@
 /* PAGE */
 .salary-page {
     min-height: 100vh;
-    padding: 30px;
+    padding: clamp(12px, 2vw, 30px);
 }
 
 /* CARD */
 .salary-card {
     background: #ffffff;
-    padding: 35px;
+    padding: clamp(14px, 2vw, 35px);
     border-radius: 14px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
@@ -45,7 +45,7 @@
 /* GRID (3 COLUMNS) */
 .salary-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
 }
 
@@ -88,7 +88,7 @@
 }
 
 /* BUTTON */
-.apply-btn {
+.salary-page .apply-btn {
     height: 45px;
     border-radius: 10px;
     font-weight: 600;
@@ -120,10 +120,69 @@ cursor:pointer;
 background:#f5f5f5;
 }
 
+.salary-history-table {
+    min-width: 820px;
+}
+
+.salary-history-table th,
+.salary-history-table td {
+    white-space: nowrap;
+}
+
+.increment-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.increment-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.increment-summary-item span {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.increment-summary-item strong {
+    color: #111827;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.increment-history-table {
+    min-width: 920px;
+}
+
+.increment-history-table th,
+.increment-history-table td {
+    white-space: nowrap;
+}
+
+.increment-history-table .increment-remarks {
+    min-width: 220px;
+    max-width: 360px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
 /* RESPONSIVE */
 @media (max-width: 992px) {
     .salary-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .increment-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -139,5 +198,25 @@ background:#f5f5f5;
 
     .salary-label {
         min-width: auto;
+    }
+
+    .increment-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .salary-history-table {
+        min-width: 760px;
+    }
+
+    .increment-history-table {
+        min-width: 820px;
+    }
+
+    .salary-history-table th,
+    .salary-history-table td,
+    .increment-history-table th,
+    .increment-history-table td {
+        font-size: 0.82rem;
+        padding: 0.45rem;
     }
 }

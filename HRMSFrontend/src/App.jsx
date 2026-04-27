@@ -27,6 +27,7 @@ import MyTasks from "./pages/employees/MyTasks";
 import DocumentVerify from "./pages/admin/DocumentVerify";
 import EmployeeRemarkAdminSide from "./pages/admin/EmployeeRemarkAdminSide";
 import EmployeeRemarkside from "./pages/employees/EmployeeRemarkside";
+import EmployeeAccountForm from "./pages/admin/EmployeeAccountForm";
 
 function App() {
   const { user } = useAuth();
@@ -81,6 +82,8 @@ function App() {
         <Route path="companyAnnouncement" element={<CompanyAnnouncement />} />
         <Route path="manageTasks" element={<ManageTasks />} />
         <Route path="DocumentVerify" element={<DocumentVerify />} />
+        <Route path="accountDetails" element={<EmployeeAccountForm/>} />
+
       </Route>
 
       {/* Default Redirect */}

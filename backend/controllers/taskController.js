@@ -20,7 +20,8 @@ const findEmployee = async (input) => {
 ============================== */
 export const createTask = async (req, res) => {
   try {
-    const { title, employeeId, department, priority, deadline } = req.body;
+    const { title, description, employeeId, department, priority, deadline } =
+      req.body;
 
     if (!title || !employeeId || !department || !deadline) {
       return res.status(400).json({
@@ -36,7 +37,6 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // ✅ Proper date validation
     const taskDeadline = new Date(deadline);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -49,11 +49,13 @@ export const createTask = async (req, res) => {
 
     const task = await Task.create({
       title: title.trim(),
+      description: description?.trim(),
       employee: employee._id,
       department,
       priority: priority || "Medium",
       deadline: taskDeadline,
       status: "Pending",
+      createdBy: req.user._id, // 🔥 important
     });
 
     res.status(201).json(task);
@@ -68,7 +70,7 @@ export const createTask = async (req, res) => {
 ============================== */
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find()
+    const tasks = await Task.find({ isActive: true })
       .populate("employee", "firstName lastName employeeId")
       .sort({ createdAt: -1 });
 
@@ -86,7 +88,6 @@ export const getEmployeeTasks = async (req, res) => {
   try {
     let employee;
 
-    // ✅ ADMIN → specific employee
     if (req.params.employeeId) {
       employee = await findEmployee(req.params.employeeId);
 
@@ -96,11 +97,9 @@ export const getEmployeeTasks = async (req, res) => {
         });
       }
     } else {
-      // ✅ EMPLOYEE → own tasks
       employee = req.user;
     }
 
-    // 🔐 Access control
     if (
       req.user.role !== "Admin" &&
       req.user._id.toString() !== employee._id.toString()
@@ -112,7 +111,10 @@ export const getEmployeeTasks = async (req, res) => {
 
     const tasks = await Task.find({
       employee: employee._id,
-    }).sort({ createdAt: -1 });
+      isActive: true,
+    })
+      .populate("employee", "firstName lastName employeeId")
+      .sort({ createdAt: -1 });
 
     res.json(tasks);
   } catch (error) {
@@ -151,7 +153,6 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // 🔐 Only admin OR assigned employee
     if (
       req.user.role !== "Admin" &&
       req.user._id.toString() !== task.employee.toString()
@@ -172,7 +173,7 @@ export const updateTaskStatus = async (req, res) => {
 };
 
 /* ==============================
-   ➤ DELETE TASK (ADMIN ONLY)
+   ➤ DELETE TASK (SOFT DELETE)
 ============================== */
 export const deleteTask = async (req, res) => {
   try {
@@ -192,7 +193,15 @@ export const deleteTask = async (req, res) => {
       });
     }
 
-    await task.deleteOne();
+    if (req.user.role !== "Admin") {
+      return res.status(403).json({
+        message: "Access denied",
+      });
+    }
+
+    // 🔥 SOFT DELETE
+    task.isActive = false;
+    await task.save();
 
     res.json({
       message: "Task deleted successfully",

@@ -1,30 +1,34 @@
-import React, { useState } from "react";
-import "../../assets/styles/EmployeDocuments.css"
+import React, { useEffect, useState } from "react";
+import API from "../../utils/axios";
+import "../../assets/styles/EmployeDocuments.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const EmployeeDocumentInfo = () => {
-
-  const [documents, setDocuments] = useState([
-    {
-    
-      name: "Aadhar Card",
-      fileName: "aadhar.pdf",
-      uploadDate: "12 Feb 2026",
-      status: "Verified"
-    },
-    {
-    
-      name: "PAN Card",
-      fileName: "pan.pdf",
-      uploadDate: "15 Feb 2026",
-      status: "Pending"
-    }
-  ]);
-
+  const [documents, setDocuments] = useState([]);
   const [docName, setDocName] = useState("");
   const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleUpload = (e) => {
+  /* ==============================
+     🔥 FETCH DOCUMENTS
+  ============================== */
+  const fetchDocuments = async () => {
+    try {
+      const res = await API.get("/documents/my-documents");
+      setDocuments(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  /* ==============================
+     🔥 UPLOAD DOCUMENT
+  ============================== */
+  const handleUpload = async (e) => {
     e.preventDefault();
 
     if (!docName || !file) {
@@ -32,41 +36,64 @@ const EmployeeDocumentInfo = () => {
       return;
     }
 
-    const newDoc = {
-      name: docName,
-      fileName: file.name,
-      uploadDate: new Date().toLocaleDateString(),
-      status: "Pending"
-    };
+    try {
+      setLoading(true);
 
-    setDocuments([...documents, newDoc]);
+      const formData = new FormData();
+      formData.append("documentName", docName);
+      formData.append("document", file); // ⚠️ must match backend
 
-    setDocName("");
-    setFile(null);
+      await API.post("/documents/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      alert("✅ Document uploaded");
+
+      setDocName("");
+      setFile(null);
+      fetchDocuments();
+
+    } catch (err) {
+      alert(err.response?.data?.message || "Upload failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    const filtered = documents.filter((doc) => doc.id !== id);
-    setDocuments(filtered);
+  /* ==============================
+     🔥 DELETE DOCUMENT
+  ============================== */
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this document?")) return;
+
+    try {
+      await API.delete(`/documents/delete/${id}`);
+      fetchDocuments();
+    } catch (err) {
+      alert("Delete failed");
+    }
   };
 
-  const handleDownload = (fileName) => {
-    alert(`Downloading ${fileName}`);
+  /* ==============================
+     🔥 DOWNLOAD DOCUMENT
+  ============================== */
+  const handleDownload = (filePath) => {
+    window.open(`http://localhost:5000/${filePath}`, "_blank");
   };
 
   return (
-    <div className="container py-4">
-
+    <div className="container py-4 employee-documents-page">
       <div className="card shadow-sm">
 
         <div className="card-header bg-white d-flex justify-content-between align-items-center">
-          <h5 className="mb-0 text-primary fw-bold"> Documents</h5>
+          <h5 className="mb-0 text-primary fw-bold">Documents</h5>
         </div>
 
         <div className="card-body">
 
           {/* Upload Form */}
-
           <form className="row g-3 mb-4" onSubmit={handleUpload}>
 
             <div className="col-md-4">
@@ -95,15 +122,14 @@ const EmployeeDocumentInfo = () => {
             </div>
 
             <div className="col-md-4 d-flex align-items-end">
-              <button className="btn btn-primary w-100">
-                Upload Document
+              <button className="btn btn-primary w-100" disabled={loading}>
+                {loading ? "Uploading..." : "Upload Document"}
               </button>
             </div>
 
           </form>
 
           {/* Document Table */}
-
           <div className="table-responsive">
 
             <table className="table table-bordered table-hover">
@@ -114,28 +140,30 @@ const EmployeeDocumentInfo = () => {
                   <th>File</th>
                   <th>Upload Date</th>
                   <th>Status</th>
-                  <th style={{width:"200px"}}>Actions</th>
+                  <th style={{ width: "200px" }}>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-
                 {documents.length > 0 ? (
-                  documents.map((doc, index) => (
-                    <tr key={doc.id}>
+                  documents.map((doc) => (
+                    <tr key={doc._id}>
 
-
-                      <td>{doc.name}</td>
+                      <td>{doc.documentName}</td>
 
                       <td>{doc.fileName}</td>
 
-                      <td>{doc.uploadDate}</td>
+                      <td>
+                        {new Date(doc.createdAt).toLocaleDateString()}
+                      </td>
 
                       <td>
                         <span
                           className={`badge ${
                             doc.status === "Verified"
                               ? "bg-success"
+                              : doc.status === "Rejected"
+                              ? "bg-danger"
                               : "bg-warning text-dark"
                           }`}
                         >
@@ -147,14 +175,14 @@ const EmployeeDocumentInfo = () => {
 
                         <button
                           className="btn btn-sm btn-info"
-                          onClick={() => handleDownload(doc.fileName)}
+                          onClick={() => handleDownload(doc.filePath)}
                         >
                           Download
                         </button>
 
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(doc.id)}
+                          onClick={() => handleDelete(doc._id)}
                         >
                           Delete
                         </button>
@@ -165,12 +193,11 @@ const EmployeeDocumentInfo = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center text-muted">
+                    <td colSpan="5" className="text-center text-muted">
                       No documents uploaded
                     </td>
                   </tr>
                 )}
-
               </tbody>
 
             </table>

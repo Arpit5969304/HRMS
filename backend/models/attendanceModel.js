@@ -1,5 +1,35 @@
 import mongoose from "mongoose";
 
+/* ==============================
+   🔥 HELPERS
+============================== */
+const normalizeDate = (val = new Date()) => {
+  const d = new Date(val);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const calculateWorkingHours = (checkIn, checkOut) => {
+  if (!checkIn || !checkOut || checkOut <= checkIn) return 0;
+  const diff = checkOut - checkIn;
+  return +(diff / (1000 * 60 * 60)).toFixed(2);
+};
+
+const calculateStatus = (doc) => {
+  if (!doc.checkIn) return "absent";
+
+  // half-day has highest priority
+  if (doc.workingHours && doc.workingHours < 4) {
+    return "half-day";
+  }
+
+  const hour = new Date(doc.checkIn).getHours();
+  return hour >= 10 ? "late" : "present";
+};
+
+/* ==============================
+   🔥 SCHEMA
+============================== */
 const attendanceSchema = new mongoose.Schema(
   {
     employee: {
@@ -12,16 +42,8 @@ const attendanceSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
-      default: () => {
-        const d = new Date();
-        d.setHours(0, 0, 0, 0);
-        return d;
-      },
-      set: (val) => {
-        const d = new Date(val);
-        d.setHours(0, 0, 0, 0);
-        return d;
-      },
+      default: normalizeDate,
+      set: normalizeDate,
       index: true,
     },
 
@@ -41,6 +63,7 @@ const attendanceSchema = new mongoose.Schema(
     workingHours: {
       type: Number,
       min: 0,
+      default: 0,
     },
 
     remark: {
@@ -48,6 +71,21 @@ const attendanceSchema = new mongoose.Schema(
       trim: true,
       maxlength: 200,
       default: "",
+    },
+
+    remarkUpdatedAt: {
+      type: Date,
+    },
+
+    reason: {
+      type: String,
+      trim: true,
+      maxlength: 200,
+      default: "",
+    },
+
+    reasonUpdatedAt: {
+      type: Date,
     },
 
     approved: {
@@ -70,47 +108,64 @@ const attendanceSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* ==============================
-   🔥 UNIQUE (1 per day)
+   🔥 INDEXES
 ============================== */
-attendanceSchema.index(
-  { employee: 1, date: 1 },
-  { unique: true }
-);
+attendanceSchema.index({ employee: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ approved: 1, date: -1 });
 
 /* ==============================
-   🔥 AUTO CALCULATION
+   🔥 PRE SAVE (CREATE / SAVE)
 ============================== */
-attendanceSchema.pre("save", function (next) {
-  // 🔥 skip if admin manually updated
-  if (this.manuallyUpdated) return next();
+attendanceSchema.pre("save", function () {
+  // ✅ working hours
+  this.workingHours = calculateWorkingHours(this.checkIn, this.checkOut);
+
+  // ✅ status
+  this.status = calculateStatus(this);
+
+});
+
+/* ==============================
+   🔥 PRE UPDATE (CRITICAL FIX)
+============================== */
+attendanceSchema.pre("findOneAndUpdate", async function (next) {
+  const update = this.getUpdate();
+
+  if (!update) return next();
+
+  const docToUpdate = await this.model.findOne(this.getQuery());
+
+  const checkIn = update.checkIn || docToUpdate.checkIn;
+  const checkOut = update.checkOut || docToUpdate.checkOut;
 
   // ✅ working hours
-  if (this.checkIn && this.checkOut && this.checkOut > this.checkIn) {
-    const diff = this.checkOut - this.checkIn;
-    this.workingHours = +(diff / (1000 * 60 * 60)).toFixed(2);
+  const hours = calculateWorkingHours(checkIn, checkOut);
+  update.workingHours = hours;
+
+  // ✅ status
+  update.status = calculateStatus({
+    checkIn,
+    workingHours: hours,
+  });
+
+  // ✅ remark tracking
+  if (update.remark !== undefined) {
+    update.remarkUpdatedAt = new Date();
   }
 
-  // ✅ status logic
-  if (!this.checkIn) {
-    this.status = "absent";
-  } else {
-    const hour = new Date(this.checkIn).getHours();
-
-    if (hour >= 10) {
-      this.status = "late";
-    } else {
-      this.status = "present";
-    }
-  }
-
-  // ✅ half-day override (highest priority)
-  if (this.workingHours && this.workingHours < 4) {
-    this.status = "half-day";
+  // ✅ reason tracking (MISSING BEFORE ❌)
+  if (update.reason !== undefined) {
+    update.reasonUpdatedAt = new Date();
   }
 
   next();

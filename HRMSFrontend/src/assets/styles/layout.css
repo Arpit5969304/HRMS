@@ -1,11 +1,37 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 0;
+  min-height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
 /* ===== Layout ===== */
 .dashboard {
   display: flex;
   height: 100vh;
-  overflow-x: hidden;   /* ✅ FIX */
+  height: 100dvh;
+  min-width: 0;
+  overflow: hidden;
 }
 
-/* ===== Sidebar (BASE) ===== */
+/* ===== Sidebar Base ===== */
 .sidebar {
   width: 250px;
   height: 100%;
@@ -15,7 +41,7 @@
   overflow-y: auto;
 }
 
-/* ===== DESKTOP (Push Mode) 💻 ===== */
+/* ===== Desktop ===== */
 @media (min-width: 769px) {
   .sidebar {
     position: relative;
@@ -24,26 +50,28 @@
 
   .sidebar.closed {
     width: 0;
-    overflow: hidden;   /* ✅ FIX */
+    overflow: hidden;
   }
 
   .main {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    overflow-x: hidden;   /* ✅ FIX */
+    height: 100dvh;
+    overflow: hidden;
   }
 }
 
-/* ===== MOBILE (Overlay Mode) 📱 ===== */
+/* ===== Mobile ===== */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
-    height: 100%;
+    width: min(82vw, 270px);
+    height: 100dvh;
     z-index: 1000;
     transform: translateX(-100%);
   }
@@ -51,29 +79,93 @@
   .sidebar.open {
     transform: translateX(0);
   }
+
+  .main {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 /* ===== Content ===== */
 .content {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
-  overflow-x: hidden;   /* ✅ FIX */
-  padding: 10px;
+  overflow-x: hidden;
+  padding: clamp(10px, 2vw, 18px);
   background: #dfe6ef;
+}
+
+.content > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.content .container,
+.content .container-fluid {
+  max-width: 100%;
+  padding-left: clamp(8px, 1.5vw, 16px);
+  padding-right: clamp(8px, 1.5vw, 16px);
+}
+
+.content .card,
+.content .card-body,
+.content section,
+.content main,
+.content .row {
+  min-width: 0;
+}
+
+.content .table-responsive,
+.content .table-wrapper,
+.content .att-table-scroll,
+.content .profile-calendar-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.content table {
+  max-width: none;
+}
+
+.content .form-control,
+.content .form-select,
+.content input,
+.content select,
+.content textarea,
+.content button {
+  max-width: 100%;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content h6,
+.content p,
+.content td,
+.content th {
+  overflow-wrap: anywhere;
 }
 
 /* ===== Overlay ===== */
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.4);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
   z-index: 999;
 }
 
-/* ===== GLOBAL SAFETY (IMPORTANT) ===== */
-body {
-  overflow-x: hidden;   /* ✅ EXTRA SAFETY */
+@media (max-width: 768px) {
+  .content {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 8px;
+  }
 }

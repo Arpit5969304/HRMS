@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../../assets/styles/Attendance.css";
 import { GrEdit } from "react-icons/gr";
-
+import API from "../../utils/axios";
 const AttendanceList = ({
   selectedYear,
   selectedMonth,
@@ -54,27 +54,32 @@ const AttendanceList = ({
     });
   }
 
-  function savetheChanges() {
-    const dayNumber = new Date(selectedDay.date).getDate();
+  const savetheChanges = async () => {
+    try {
+      const dayNumber = new Date(selectedDay.date).getDate();
 
-    setAttendanceData((prev) => ({
-      ...prev,
-      [selectedYear]: {
-        ...prev[selectedYear],
-        [selectedMonth]: {
-          ...prev[selectedYear]?.[selectedMonth],
-          [dayNumber]: {
-            status: "present",
-            checkIn: selectedDay.checkIn,
-            checkOut: selectedDay.checkOut,
-            break: selectedDay.breakTime,
-          },
-        },
-      },
-    }));
+      const record = attendanceData[selectedYear]?.[selectedMonth]?.[dayNumber];
 
-    setIsModalOpen(false);
-  }
+      if (!record?._id) {
+        alert("Record not found");
+        return;
+      }
+
+      await API.put(`/attendance/admin/${record._id}`, {
+        checkIn: selectedDay.checkIn,
+        checkOut: selectedDay.checkOut,
+      });
+
+      alert("Updated successfully");
+
+      setIsModalOpen(false);
+
+      window.location.reload(); // quick refresh
+    } catch (err) {
+      console.error(err);
+      alert("Update failed");
+    }
+  };
 
   function calculateDuration(start, end) {
     const [sh, sm] = start.split(":").map(Number);
@@ -94,13 +99,13 @@ const AttendanceList = ({
   }
 
   return (
-    <>
+    <div className="attendance-list-section">
       <div className="table-responsive">
         <table className="attendance-table">
           <thead>
             <tr>
               <th className="top-tr" colSpan="8">
-                  Attendance List - {selectedMonth + 1}/{selectedYear}
+                Attendance List - {selectedMonth + 1}/{selectedYear}
               </th>
             </tr>
 
@@ -222,7 +227,7 @@ const AttendanceList = ({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

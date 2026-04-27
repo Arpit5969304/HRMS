@@ -4,22 +4,23 @@ const holidaySchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Holiday name is required"],
       trim: true,
       maxlength: 100,
     },
 
     date: {
       type: Date,
-      required: true,
-      set: (val) => {
-        const d = new Date(val);
-        d.setHours(0, 0, 0, 0); // 🔥 normalize
-        return d;
+      required: [true, "Date is required"],
+      validate: {
+        validator: function (value) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return value >= today;
+        },
+        message: "Holiday date cannot be in the past",
       },
-      index: true,
     },
-
     description: {
       type: String,
       trim: true,
@@ -40,7 +41,10 @@ const holidaySchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["Festival", "Company", "Optional"],
+      enum: {
+        values: ["Festival", "Company", "Optional"],
+        message: "Invalid holiday type",
+      },
       default: "Festival",
     },
 
@@ -54,27 +58,24 @@ const holidaySchema = new mongoose.Schema(
       ref: "Admin",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 /* ==============================
    🔥 AUTO YEAR SET
 ============================== */
-holidaySchema.pre("save", function (next) {
+holidaySchema.pre("save", function () {
   if (this.date) {
     this.year = new Date(this.date).getFullYear();
   }
-  next();
 });
 
 /* ==============================
    🔥 UNIQUE (PER DAY)
 ============================== */
-holidaySchema.index({ date: 1 }, { unique: true });
-
+holidaySchema.index({ date: 1, name: 1 }, { unique: true });
 /* ==============================
    🔥 PERFORMANCE INDEX
 ============================== */
 holidaySchema.index({ year: 1, approved: 1 });
-
 export default mongoose.model("Holiday", holidaySchema);

@@ -1,32 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import API from "../../utils/axios";
 
 const ManageHoliday = () => {
-  const [holidays, setHolidays] = useState([
-    {
-      id: 1,
-      name: "Republic Day",
-      date: "2025-01-26",
-      description: "National Holiday",
-      isNational: true,
-      approved: true,
-    },
-    {
-      id: 2,
-      name: "Independence Day",
-      date: "2025-08-15",
-      description: "National Holiday",
-      isNational: true,
-      approved: true,
-    },
-    {
-      id: 3,
-      name: "Diwali",
-      date: "2025-10-20",
-      description: "Festival of Lights",
-      isNational: false,
-      approved: false,
-    },
-  ]);
+  const [holidays, setHolidays] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     id: null,
@@ -36,6 +14,50 @@ const ManageHoliday = () => {
     isNational: false,
   });
 
+  /* ==============================
+     🔥 FETCH HOLIDAYS
+  ============================== */
+  const fetchHolidays = async () => {
+    try {
+      setLoading(true);
+
+      const res = await API.get("/holidays"); // ✅ FIXED
+
+      
+      console.log(res);
+
+      setHolidays(res.data.data || []);
+    } catch (error) {
+      console.error("FETCH ERROR:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHolidays();
+  }, []);
+
+  /* ==============================
+     🔥 VALIDATION
+  ============================== */
+  const validate = () => {
+    let newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Holiday name is required";
+    }
+
+    if (!formData.date) {
+      newErrors.date = "Date is required";
+    }
+
+    return newErrors;
+  };
+
+  /* ==============================
+     🔥 HANDLE CHANGE
+  ============================== */
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -43,46 +65,83 @@ const ManageHoliday = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+
+    setErrors({
+      ...errors,
+      [name]: "",
+    });
   };
 
-  const handleSave = () => {
-    if (!formData.name || !formData.date) {
-      alert("Please fill required fields");
+  /* ==============================
+     🔥 CREATE / UPDATE
+  ============================== */
+  const handleSave = async () => {
+    const validationErrors = validate();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    if (formData.id) {
-      setHolidays(
-        holidays.map((h) => (h.id === formData.id ? { ...h, ...formData } : h)),
-      );
-    } else {
-      const newHoliday = {
-        ...formData,
-        id: Date.now(),
-        approved: false,
-      };
-      setHolidays([...holidays, newHoliday]);
-    }
+    try {
+      if (formData.id) {
+        // UPDATE
+        await API.put(`/holidays/${formData.id}`, formData);
+      } else {
+        // CREATE
+        await API.post("/holidays", formData);
+      }
 
-    handleClear();
+      fetchHolidays();
+      handleClear();
+    } catch (error) {
+      console.error("SAVE ERROR:", error);
+      alert(error.response?.data?.message || "Error saving holiday");
+    }
   };
 
+  /* ==============================
+     🔥 EDIT
+  ============================== */
   const handleEdit = (holiday) => {
-    setFormData(holiday);
+    setFormData({
+      id: holiday._id,
+      name: holiday.name,
+      date: holiday.date?.slice(0, 10),
+      description: holiday.description || "",
+      isNational: holiday.isNational,
+    });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure to delete?")) {
-      setHolidays(holidays.filter((h) => h.id !== id));
+  /* ==============================
+     🔥 DELETE
+  ============================== */
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure to delete?")) return;
+
+    try {
+      await API.delete(`/holidays/${id}`); // ✅ FIXED
+      fetchHolidays();
+    } catch (error) {
+      console.error("DELETE ERROR:", error);
     }
   };
 
-  const handleApproveToggle = (id) => {
-    setHolidays(
-      holidays.map((h) => (h.id === id ? { ...h, approved: !h.approved } : h)),
-    );
+  /* ==============================
+     🔥 APPROVE TOGGLE
+  ============================== */
+  const handleApproveToggle = async (id) => {
+    try {
+      await API.patch(`/holidays/${id}/approve`); // ✅ FIXED
+      fetchHolidays();
+    } catch (error) {
+      console.error("APPROVE ERROR:", error);
+    }
   };
 
+  /* ==============================
+     🔥 CLEAR FORM
+  ============================== */
   const handleClear = () => {
     setFormData({
       id: null,
@@ -91,83 +150,75 @@ const ManageHoliday = () => {
       description: "",
       isNational: false,
     });
+    setErrors({});
   };
 
   const formatDate = (date) => {
-    const d = new Date(date);
-    return d.toLocaleDateString("en-GB");
+    return new Date(date).toLocaleDateString("en-GB");
   };
 
   return (
-    <div className="container-fluid p-3 p-md-4 bg-light">
-      {/* Add / Edit Holiday */}
-      <div className="card shadow-sm mb-4">
-        <div className="card-header bg-primary text-white fw-semibold">
+    <div className="container-fluid p-3 bg-light">
+      {/* FORM */}
+      <div className="card mb-4">
+        <div className="card-header bg-primary text-white">
           Add / Edit Holiday
         </div>
 
         <div className="card-body">
           <div className="row g-3">
-            <div className="col-12 col-sm-6 col-lg-4">
-              <label className="form-label">Holiday Name</label>
+            <div className="col-md-4">
               <input
                 type="text"
-                className="form-control"
+                className={`form-control ${errors.name ? "is-invalid" : ""}`}
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Enter holiday name"
+                placeholder="Holiday Name"
               />
+              {errors.name && (
+                <div className="invalid-feedback">{errors.name}</div>
+              )}
             </div>
 
-            <div className="col-12 col-sm-6 col-lg-4">
-              <label className="form-label">Date</label>
+            <div className="col-md-4">
               <input
                 type="date"
-                className="form-control"
+                className={`form-control ${errors.date ? "is-invalid" : ""}`}
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
               />
+              {errors.date && (
+                <div className="invalid-feedback">{errors.date}</div>
+              )}
             </div>
 
-            <div className="col-12 col-sm-6 col-lg-4 d-flex align-items-center">
-              <div className="form-check mt-2 mt-md-0">
-                <input
-                  type="checkbox"
-                  className="form-check-input"
-                  name="isNational"
-                  checked={formData.isNational}
-                  onChange={handleChange}
-                />
-                <label className="form-check-label">Is National Holiday?</label>
-              </div>
+            <div className="col-md-4 d-flex align-items-center">
+              <input
+                type="checkbox"
+                name="isNational"
+                checked={formData.isNational}
+                onChange={handleChange}
+              />
+              <span className="ms-2">National Holiday</span>
             </div>
 
             <div className="col-12">
-              <label className="form-label">Description</label>
               <textarea
                 className="form-control"
-                rows="2"
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Enter description"
-              ></textarea>
+                placeholder="Description"
+              />
             </div>
 
-            <div className="col-12 d-flex flex-column flex-sm-row justify-content-end gap-2">
-              <button
-                className="btn btn-success  w-sm-auto"
-                onClick={handleSave}
-              >
-                {formData.id ? "Update Holiday" : "Save Holiday"}
+            <div className="col-12 text-end">
+              <button className="btn btn-success me-2" onClick={handleSave}>
+                {formData.id ? "Update" : "Save"}
               </button>
-
-              <button
-                className="btn btn-secondary  w-sm-auto"
-                onClick={handleClear}
-              >
+              <button className="btn btn-secondary" onClick={handleClear}>
                 Clear
               </button>
             </div>
@@ -175,76 +226,65 @@ const ManageHoliday = () => {
         </div>
       </div>
 
-      {/* Manage Holiday Table */}
-      <div className="card shadow-sm">
-        <div className="card-header bg-info text-white fw-semibold">
-          Manage Holiday
+      {/* TABLE */}
+      <div className="card">
+        <div className="card-header bg-info text-white">
+          Manage Holidays
         </div>
 
-        <div className="card-body p-0 table-responsive">
-          <table className="table table-bordered table-hover mb-0 text-nowrap">
-            <thead className="table-light">
-              <tr>
-                <th>Holiday Name</th>
-                <th>Date</th>
-                <th>Description</th>
-                <th className="text-center">National?</th>
-                <th className="text-center">Approved?</th>
-                <th className="text-center">Actions</th>
-              </tr>
-            </thead>
+        <div className="card-body">
+          {loading ? (
+            <p>Loading...</p>
+          ) : (
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>National</th>
+                  <th>Approved</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              {holidays.map((holiday) => (
-                <tr key={holiday.id}>
-                  <td>{holiday.name}</td>
-                  <td>{formatDate(holiday.date)}</td>
-                  <td>{holiday.description}</td>
+              <tbody>
+                {holidays.map((h) => (
+                  <tr key={h._id}>
+                    <td>{h.name}</td>
+                    <td>{formatDate(h.date)}</td>
+                    <td>{h.description}</td>
 
-                  <td className="text-center">
-                    {holiday.isNational ? (
-                      <span className="text-success fw-bold">✔</span>
-                    ) : (
-                      <span className="text-danger fw-bold">✖</span>
-                    )}
-                  </td>
+                    <td>{h.isNational ? "✔" : "✖"}</td>
 
-                  <td className="text-center">
-                    <input
-                      type="checkbox"
-                      checked={holiday.approved}
-                      onChange={() => handleApproveToggle(holiday.id)}
-                    />
-                  </td>
-                  <td className="text-center">
-                    <div className="d-flex justify-content-center flex-nowrap gap-1">
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={h.approved}
+                        onChange={() => handleApproveToggle(h._id)}
+                      />
+                    </td>
+
+                    <td>
                       <button
-                        className="btn btn-sm btn-primary"
-                        onClick={() => handleEdit(holiday)}
+                        className="btn btn-sm btn-primary me-2"
+                        onClick={() => handleEdit(h)}
                       >
-                        ✏
+                        Edit
                       </button>
 
                       <button
                         className="btn btn-sm btn-danger"
-                        onClick={() => handleDelete(holiday.id)}
+                        onClick={() => handleDelete(h._id)}
                       >
-                        🗑
+                        Delete
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-
-              {holidays.length === 0 && (
-                <tr>
-                  <td colSpan="6" className="text-center py-3">
-                    No holidays found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

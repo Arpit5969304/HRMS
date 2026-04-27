@@ -1,5 +1,5 @@
 /* ===== HEADER ===== */
-.card-header {
+.employee-documents-page .card-header {
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -8,33 +8,33 @@
 @media (max-width: 768px) {
 
   /* Stack form */
-  form.row.g-3 > div {
+  .employee-documents-page form.row.g-3 > div {
     width: 100%;
   }
 
   /* Button full width */
-  form .btn {
+  .employee-documents-page form .btn {
     width: 100%;
   }
 
 }
 
 /* ===== TABLE RESPONSIVE ===== */
-.table-responsive {
+.employee-documents-page .table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent table breaking */
-.table {
+.employee-documents-page .table {
   min-width: 750px;
 }
 
 /* ===== STICKY FIRST COLUMN (MOBILE ONLY) ===== */
 @media (max-width: 768px) {
 
-  .table th:first-child,
-  .table td:first-child {
+  .employee-documents-page .table th:first-child,
+  .employee-documents-page .table td:first-child {
     position: sticky;
     left: 0;
     z-index: 2;
@@ -43,34 +43,34 @@
 
 
   /* First column width control */
-.table th:first-child,
-.table td:first-child {
+.employee-documents-page .table th:first-child,
+.employee-documents-page .table td:first-child {
   min-width: 120px;   /* decrease width */
   max-width: 150px;
   width: 130px;
 }
 
 /* Prevent long text breaking layout */
-.table td:first-child {
+.employee-documents-page .table td:first-child {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
   /* Header priority */
-  .table thead th:first-child {
+  .employee-documents-page .table thead th:first-child {
     z-index: 3;
   }
 
   /* Shadow for separation */
-  .table th:first-child,
-  .table td:first-child {
+  .employee-documents-page .table th:first-child,
+  .employee-documents-page .table td:first-child {
     box-shadow: 2px 0 5px rgba(0,0,0,0.05);
   }
 
   /* Compact text */
-  .table th,
-  .table td {
+  .employee-documents-page .table th,
+  .employee-documents-page .table td {
     font-size: 13px;
     white-space: nowrap;
   }
@@ -85,12 +85,12 @@
 /* ===== SMALL MOBILE ===== */
 @media (max-width: 480px) {
 
-  .table th,
-  .table td {
+  .employee-documents-page .table th,
+  .employee-documents-page .table td {
     font-size: 12px;
   }
 
-  .card {
+  .employee-documents-page .card {
     padding: 10px;
   }
 

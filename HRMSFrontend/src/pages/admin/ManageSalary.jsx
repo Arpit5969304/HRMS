@@ -1,98 +1,177 @@
 import React, { useState } from "react";
 import "../../assets/styles/ManageSalary.css";
+import useEmployees from "../../hooks/useEmployees";
+import useSalary from "../../hooks/useSalary";
+
+const emptySalary = {
+  basic: "",
+  hra: "",
+  conveyance: "",
+  medical: "",
+  lta: "",
+  special: "",
+};
+
+const salaryFields = ["basic", "hra", "conveyance", "medical", "lta", "special"];
+
+const salaryLabels = {
+  basic: "Basic",
+  hra: "HRA",
+  conveyance: "Conveyance",
+  medical: "Medical",
+  lta: "LTA",
+  special: "Special",
+};
+
+const monthNames = [
+  "",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const formatMoney = (amount) =>
+  `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
+
+const formatDate = (date) => {
+  if (!date) return "-";
+
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+const getHistoryTotal = (record) => {
+  if (record.totalSalary !== undefined && record.totalSalary !== null) {
+    return record.totalSalary;
+  }
+
+  return salaryFields.reduce(
+    (total, field) => total + Number(record.salary?.[field] || 0),
+    0
+  );
+};
+
+const hasAmount = (amount) =>
+  amount !== undefined && amount !== null && amount !== "";
+
+const formatOptionalMoney = (amount) =>
+  hasAmount(amount) ? formatMoney(amount) : "-";
+
+const getAppliedByName = (increment) => {
+  const appliedBy = increment.createdBy;
+
+  if (!appliedBy) return "-";
+  if (typeof appliedBy === "string") return appliedBy;
+
+  const name = [appliedBy.firstName, appliedBy.lastName]
+    .filter(Boolean)
+    .join(" ");
+
+  if (name && appliedBy.employeeId) {
+    return `${name} (${appliedBy.employeeId})`;
+  }
+
+  return name || appliedBy.employeeId || "-";
+};
+
+const getPreviousBasic = (increment) => {
+  if (hasAmount(increment.previousBasic)) return increment.previousBasic;
+  if (hasAmount(increment.newBasic)) {
+    return Number(increment.newBasic) - Number(increment.amount || 0);
+  }
+
+  return null;
+};
+
+const getNewBasic = (increment) => {
+  if (hasAmount(increment.newBasic)) return increment.newBasic;
+  if (hasAmount(increment.previousBasic)) {
+    return Number(increment.previousBasic) + Number(increment.amount || 0);
+  }
+
+  return null;
+};
 
 const ManageSalary = () => {
-  // Demo Employee Data
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Rahul Sharma",
-      department: "IT",
-      salary: {
-        basic: 15000,
-        hra: 7000,
-        conveyance: 1000,
-        medical: 1200,
-        lta: 900,
-        special: 3500,
-      },
-    },
-    {
-      id: 2,
-      name: "Priya Verma",
-      department: "HR",
-      salary: {
-        basic: 18000,
-        hra: 8000,
-        conveyance: 1200,
-        medical: 1500,
-        lta: 1000,
-        special: 4000,
-      },
-    },
-    {
-      id: 3,
-      name: "Amit Singh",
-      department: "Finance",
-      salary: {
-        basic: 20000,
-        hra: 9000,
-        conveyance: 1500,
-        medical: 1800,
-        lta: 1200,
-        special: 4500,
-      },
-    },
-  ]);
+  const { employees } = useEmployees();
 
-  const [salary, setSalary] = useState({
-    basic: 12000,
-    hra: 6000,
-    conveyance: 800,
-    medical: 1250,
-    lta: 750,
-    special: 3200,
-  });
+  const {
+    salaryHistory,
+    incrementHistory,
+    saveSalary,
+    applyIncrement,
+    getCurrentSalary,
+    getSalaryHistory,
+    getIncrementHistory,
+  } = useSalary();
+
+  const [salary, setSalary] = useState(emptySalary);
 
   const [searchEmployee, setSearchEmployee] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [errors, setErrors] = useState({});
-  const [salaryHistory, setSalaryHistory] = useState([]);
   const [activeTab, setActiveTab] = useState("salary");
-  const [incrementHistory, setIncrementHistory] = useState([]);
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const departments = [...new Set(employees.map((emp) => emp.department))];
+
+  const departments = [
+    ...new Set(employees.map((emp) => emp.department).filter(Boolean)),
+  ];
 
   const [incrementAmount, setIncrementAmount] = useState("");
   const [remarks, setRemarks] = useState("");
 
+  const totalIncrementAmount = incrementHistory.reduce(
+    (total, increment) => total + Number(increment.amount || 0),
+    0
+  );
+
+  const latestIncrementDate = incrementHistory[0]?.createdAt;
+
   const netSalary =
-    Number(salary.basic) +
-    Number(salary.hra) +
-    Number(salary.conveyance) +
-    Number(salary.medical) +
-    Number(salary.lta) +
-    Number(salary.special);
+    Number(salary.basic || 0) +
+    Number(salary.hra || 0) +
+    Number(salary.conveyance || 0) +
+    Number(salary.medical || 0) +
+    Number(salary.lta || 0) +
+    Number(salary.special || 0);
 
   const handleChange = (field, value) => {
     setSalary({ ...salary, [field]: value });
   };
 
-  // Search employee
+  /* ==============================
+     🔥 SEARCH
+  ============================== */
   const handleEmployeeSearch = (value) => {
     setSearchEmployee(value);
 
     const search = value.toLowerCase();
 
     const results = employees.filter((emp) => {
+      const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
+
       const matchesDepartment =
         !selectedDepartment || emp.department === selectedDepartment;
 
       const matchesSearch =
-        emp.name.toLowerCase().includes(search) ||
-        emp.department.toLowerCase().includes(search) ||
-        emp.id.toString().includes(search);
+        fullName.includes(search) ||
+        emp.department?.toLowerCase().includes(search) ||
+        emp.employeeId?.toLowerCase().includes(search);
 
       return matchesDepartment && matchesSearch;
     });
@@ -100,14 +179,38 @@ const ManageSalary = () => {
     setFilteredEmployees(results);
   };
 
-  // Select employee from dropdown
-  const selectEmployee = (emp) => {
-    setSearchEmployee(emp.name);
-    setSelectedEmployeeId(emp.id);
-    setSalary({ ...emp.salary });
+  /* ==============================
+     🔥 SELECT EMPLOYEE
+  ============================== */
+  const selectEmployee = async (emp) => {
+    setSearchEmployee(`${emp.firstName} ${emp.lastName}`);
+    setSelectedEmployee(emp);
     setFilteredEmployees([]);
+    setErrors({});
+
+    const currentSalary = await getCurrentSalary(emp._id);
+
+    if (currentSalary) {
+      setSalary({
+        basic: currentSalary.basic ?? "",
+        hra: currentSalary.hra ?? "",
+        conveyance: currentSalary.conveyance ?? "",
+        medical: currentSalary.medical ?? "",
+        lta: currentSalary.lta ?? "",
+        special: currentSalary.special ?? "",
+      });
+    } else {
+      setSalary(emptySalary);
+    }
+
+    // 🔥 fetch history from backend
+    await getSalaryHistory(emp._id);
+    await getIncrementHistory(emp._id);
   };
 
+  /* ==============================
+     🔥 VALIDATION
+  ============================== */
   const validateSalary = () => {
     let newErrors = {};
 
@@ -122,32 +225,30 @@ const ManageSalary = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSaveSalary = () => {
-    if (!selectedEmployeeId) {
+  /* ==============================
+     🔥 SAVE SALARY (API)
+  ============================== */
+  const handleSaveSalary = async () => {
+    if (!selectedEmployee) {
       alert("Please select employee");
       return;
     }
 
     if (!validateSalary()) return;
 
-    const historyRecord = {
-      employeeId: selectedEmployeeId,
-      salary: { ...salary },
-      date: new Date().toLocaleDateString(),
-    };
-
-    setSalaryHistory((prev) => [...prev, historyRecord]);
-    const updatedEmployees = employees.map((emp) =>
-      emp.id === selectedEmployeeId ? { ...emp, salary: { ...salary } } : emp,
-    );
-
-    setEmployees(updatedEmployees);
-
-    alert("Salary updated successfully");
+    try {
+      const result = await saveSalary(selectedEmployee._id, salary);
+      alert(result?.message || "Salary saved successfully");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error");
+    }
   };
 
-  const handleIncrement = () => {
-    if (!selectedEmployeeId) {
+  /* ==============================
+     🔥 INCREMENT (API)
+  ============================== */
+  const handleIncrement = async () => {
+    if (!selectedEmployee) {
       alert("Select employee first");
       return;
     }
@@ -157,25 +258,31 @@ const ManageSalary = () => {
       return;
     }
 
-    const updatedBasic = Number(salary.basic) + Number(incrementAmount);
+    try {
+      const result = await applyIncrement(
+        selectedEmployee._id,
+        incrementAmount,
+        remarks
+      );
 
-    const updatedSalary = {
-      ...salary,
-      basic: updatedBasic,
-    };
+      if (result?.salary) {
+        setSalary({
+          basic: result.salary.basic ?? "",
+          hra: result.salary.hra ?? "",
+          conveyance: result.salary.conveyance ?? "",
+          medical: result.salary.medical ?? "",
+          lta: result.salary.lta ?? "",
+          special: result.salary.special ?? "",
+        });
+      }
 
-    setSalary(updatedSalary);
+      setIncrementAmount("");
+      setRemarks("");
 
-    const record = {
-      employeeId: selectedEmployeeId,
-      amount: incrementAmount,
-      remarks: remarks,
-      date: new Date().toLocaleDateString(),
-    };
-
-    setIncrementHistory((prev) => [...prev, record]);
-    setIncrementAmount("");
-    setRemarks("");
+      alert("✅ Increment applied");
+    } catch (err) {
+      alert(err.response?.data?.message || "Error");
+    }
   };
 
   return (
@@ -188,8 +295,8 @@ const ManageSalary = () => {
             </h4>
 
             {/* Employee Search + Net Salary */}
-
             <div className="row g-3 mb-3">
+              {/* Department */}
               <div className="col-12 col-sm-6 col-lg-4">
                 <label className="form-label fw-semibold">Department</label>
 
@@ -207,6 +314,8 @@ const ManageSalary = () => {
                   ))}
                 </select>
               </div>
+
+              {/* Search */}
               <div className="col-12 col-sm-6 col-lg-4">
                 <label className="form-label fw-semibold">
                   Select Employee
@@ -218,19 +327,23 @@ const ManageSalary = () => {
                     className="form-control"
                     placeholder="Search employee..."
                     value={searchEmployee}
-                    onChange={(e) => handleEmployeeSearch(e.target.value)}
+                    onChange={(e) =>
+                      handleEmployeeSearch(e.target.value)
+                    }
                   />
 
                   {filteredEmployees.length > 0 && (
                     <ul className="list-group position-absolute w-100 shadow">
                       {filteredEmployees.map((emp) => (
                         <li
-                          key={emp.id}
+                          key={emp._id}
                           className="list-group-item list-group-item-action"
                           onClick={() => selectEmployee(emp)}
                         >
                           <div className="d-flex justify-content-between">
-                            <span>{emp.name}</span>
+                            <span>
+                              {emp.firstName} {emp.lastName}
+                            </span>
                             <small className="text-muted">
                               {emp.department}
                             </small>
@@ -242,8 +355,11 @@ const ManageSalary = () => {
                 </div>
               </div>
 
+              {/* Net Salary */}
               <div className="col-12 col-sm-6 col-lg-4">
-                <label className="form-label fw-semibold">Monthly Salary</label>
+                <label className="form-label fw-semibold">
+                  Monthly Salary
+                </label>
 
                 <input
                   type="text"
@@ -255,7 +371,6 @@ const ManageSalary = () => {
             </div>
 
             {/* Tabs */}
-
             <ul className="nav nav-tabs mb-4">
               <li className="nav-item">
                 <button
@@ -285,14 +400,12 @@ const ManageSalary = () => {
               </li>
             </ul>
 
-            {/* Salary Structure */}
-
+            {/* Salary */}
             {activeTab === "salary" && (
               <>
                 <div className="row g-3">
                   {Object.keys(salary).map((key) => (
                     <div className="col-12 col-sm-6 col-lg-4" key={key}>
-                      {/* Compact Input */}
                       <div className="input-group-m">
                         <span className="input-addon text-capitalize">
                           {key}
@@ -302,19 +415,24 @@ const ManageSalary = () => {
                           type="number"
                           className="custom-input"
                           value={salary[key]}
-                          onChange={(e) => handleChange(key, e.target.value)}
+                          onChange={(e) =>
+                            handleChange(key, (e.target.value))
+                          }
                         />
                       </div>
 
-                      {/* Error SAME */}
                       {errors[key] && (
-                        <small className="text-danger">{errors[key]}</small>
+                        <small className="text-danger">
+                          {errors[key]}
+                        </small>
                       )}
                     </div>
                   ))}
 
                   <div className="col-12 col-sm-6 col-lg-4">
-                    <label className="form-label fw-semibold">Net Salary</label>
+                    <label className="form-label fw-semibold">
+                      Net Salary
+                    </label>
 
                     <input
                       type="text"
@@ -334,49 +452,46 @@ const ManageSalary = () => {
                   </button>
                 </div>
 
-                {/* Increment Section */}
-
-                <div className="card  border-0 bg-light">
+                {/* Increment */}
+                <div className="card border-0 bg-light">
                   <div className="card-body">
                     <h6 className="fw-bold mb-3">Apply Increment</h6>
 
                     <div className="row g-3 align-items-end">
-                      {/* Increment Amount */}
                       <div className="col-12 col-sm-6 col-lg-4">
-
                         <div className="input-group-m">
-                          <span className="input-addon">Increment</span>
+                          <span className="input-addon">
+                            Increment
+                          </span>
 
                           <input
                             type="number"
                             className="custom-input"
                             value={incrementAmount}
-                            onChange={(e) => setIncrementAmount(e.target.value)}
+                            onChange={(e) =>
+                              setIncrementAmount(e.target.value)
+                            }
                           />
                         </div>
                       </div>
 
-                      {/* Remarks */}
                       <div className="col-12 col-sm-6 col-lg-4">
-
                         <div className="input-group-m">
-                          <span className="input-addon">Remarks</span>
+                          <span className="input-addon">
+                            Remarks
+                          </span>
 
                           <input
                             type="text"
-                            name="remarks"
                             className="custom-input"
                             value={remarks}
-                            onChange={(e) => setRemarks(e.target.value)}
+                            onChange={(e) =>
+                              setRemarks(e.target.value)
+                            }
                           />
                         </div>
-
-                        {errors?.remarks && (
-                          <small className="error">{errors.remarks}</small>
-                        )}
                       </div>
 
-                      {/* Button */}
                       <div className="col-12 col-sm-6 col-lg-4 d-grid">
                         <button
                           className="btn btn-warning"
@@ -392,67 +507,131 @@ const ManageSalary = () => {
             )}
 
             {/* Salary History */}
-
             {activeTab === "history" && (
               <div className="table-responsive">
-                <table className="table table-striped table-bordered">
+                <table className="table table-striped table-bordered align-middle salary-history-table">
                   <thead className="table-light">
                     <tr>
-                      <th>Date</th>
-                      <th>Basic</th>
-                      <th>HRA</th>
-                      <th>Conveyance</th>
-                      <th>Medical</th>
-                      <th>LTA</th>
-                      <th>Special</th>
+                      <th>Period</th>
+                      {salaryFields.map((field) => (
+                        <th key={field}>{salaryLabels[field]}</th>
+                      ))}
+                      <th>Total</th>
+                      <th>Updated</th>
                     </tr>
                   </thead>
 
                   <tbody>
-                    {salaryHistory
-                      .filter((h) => h.employeeId === selectedEmployeeId)
-                      .map((h, index) => (
-                        <tr key={index}>
-                          <td>{h.date}</td>
-                          <td>{h.salary.basic}</td>
-                          <td>{h.salary.hra}</td>
-                          <td>{h.salary.conveyance}</td>
-                          <td>{h.salary.medical}</td>
-                          <td>{h.salary.lta}</td>
-                          <td>{h.salary.special}</td>
+                    {salaryHistory.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={salaryFields.length + 3}
+                          className="text-center text-muted py-4"
+                        >
+                          No salary history found
+                        </td>
+                      </tr>
+                    ) : (
+                      salaryHistory.map((h, index) => (
+                        <tr
+                          key={h._id || index}
+                          className={index === 0 ? "table-success" : ""}
+                        >
+                          <td className="fw-semibold">
+                            {monthNames[h.month] || h.month} {h.year}
+                          </td>
+                          {salaryFields.map((field) => (
+                            <td key={field}>{formatMoney(h.salary?.[field])}</td>
+                          ))}
+                          <td className="fw-bold">
+                            {formatMoney(getHistoryTotal(h))}
+                          </td>
+                          <td>{formatDate(h.updatedAt || h.createdAt || h.date)}</td>
                         </tr>
-                      ))}
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             )}
 
             {/* Increment History */}
-
             {activeTab === "increment" && (
-              <div className="table-responsive">
-                <table className="table table-striped table-bordered">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Date</th>
-                      <th>Amount</th>
-                      <th>Remarks</th>
-                    </tr>
-                  </thead>
+              <>
+                <div className="increment-summary-grid mb-3">
+                  <div className="increment-summary-item">
+                    <span>Total Increment</span>
+                    <strong>{formatMoney(totalIncrementAmount)}</strong>
+                  </div>
 
-                  <tbody>
-                    {incrementHistory
-                      .filter((i) => i.employeeId === selectedEmployeeId)
-                      .map((i, index) => (
-                        <tr key={index}>
-                          <td>{i.date}</td>
-                          <td>₹ {i.amount}</td>
-                          <td>{i.remarks}</td>
+                  <div className="increment-summary-item">
+                    <span>Last Increment</span>
+                    <strong>{formatDate(latestIncrementDate)}</strong>
+                  </div>
+
+                  <div className="increment-summary-item">
+                    <span>Records</span>
+                    <strong>{incrementHistory.length}</strong>
+                  </div>
+                </div>
+
+                <div className="table-responsive">
+                  <table className="table table-striped table-bordered align-middle increment-history-table">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Date</th>
+                        <th className="text-end">Previous Basic</th>
+                        <th className="text-end">Increment</th>
+                        <th className="text-end">New Basic</th>
+                        <th>Remarks</th>
+                        <th>Applied By</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {incrementHistory.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="text-center text-muted py-4"
+                          >
+                            No increment history found
+                          </td>
                         </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
+                      ) : (
+                        incrementHistory.map((i, index) => {
+                          const previousBasic = getPreviousBasic(i);
+                          const newBasic = getNewBasic(i);
+
+                          return (
+                            <tr
+                              key={i._id || index}
+                              className={index === 0 ? "table-success" : ""}
+                            >
+                              <td className="fw-semibold">
+                                {formatDate(i.createdAt)}
+                              </td>
+                              <td className="text-end">
+                                {formatOptionalMoney(previousBasic)}
+                              </td>
+                              <td className="text-end fw-bold text-success">
+                                {formatMoney(i.amount)}
+                              </td>
+                              <td className="text-end fw-semibold">
+                                {formatOptionalMoney(newBasic)}
+                              </td>
+                              <td className="increment-remarks">
+                                {i.remarks || "-"}
+                              </td>
+                              <td>{getAppliedByName(i)}</td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>

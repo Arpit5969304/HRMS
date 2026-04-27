@@ -9,20 +9,40 @@ import {
   deleteDocument,
 } from "../controllers/documentController.js";
 
-// 🔥 ADD THIS
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ➤ Upload (Employee)
-router.post("/", protect, upload.single("file"), uploadDocument);
+/* ==============================
+   📌 EMPLOYEE ROUTES
+============================== */
 
-// ➤ Employee own documents (SAFE 🔐)
-router.get("/me", protect, getEmployeeDocuments);
+// 🔥 Upload Document (Employee)
+router.post(
+  "/upload",
+  protect,
+  upload.single("document"), // ✅ must match frontend
+  uploadDocument
+);
 
-// ➤ Admin only
-router.get("/", protect, adminOnly, getAllDocuments);
-router.put("/:id/status", protect, adminOnly, updateDocumentStatus);
-router.delete("/:id", protect, adminOnly, deleteDocument);
+// 🔥 Get own documents
+router.get("/my-documents", protect, getEmployeeDocuments);
+
+// 🔥 Delete own document (employee allowed)
+router.delete("/delete/:id", protect, deleteDocument);
+
+
+/* ==============================
+   📌 ADMIN ROUTES
+============================== */
+
+// 🔥 Get all documents
+router.get("/all", protect, adminOnly, getAllDocuments);
+
+// 🔥 Update document status
+router.put("/status/:id", protect, adminOnly, updateDocumentStatus);
+
+// 🔥 Admin delete
+router.delete("/admin-delete/:id", protect, adminOnly, deleteDocument);
 
 export default router;

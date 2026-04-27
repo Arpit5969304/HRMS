@@ -275,6 +275,35 @@
   transition: opacity 0.3s ease;
 }
 
+
+/* =========================
+   STATUS COLORS
+========================= */
+
+.present {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.absent {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.late {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.half-day {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.sunday {
+  background-color: #e2e3e5;
+  color: #6c757d;
+}
 /* =======================================================
    ATTENDANCE TABLE
 ======================================================= */
@@ -334,7 +363,7 @@
 /* =======================================================
    EDIT BUTTON
 ======================================================= */
-.edit-btn {
+.attendance-container .edit-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -350,7 +379,7 @@
   transition: all 0.2s ease;
 }
 
-.edit-btn:hover {
+.attendance-container .edit-btn:hover {
   background-color: #0a58ca;
   transform: scale(1.05);
 }
@@ -380,13 +409,13 @@
   animation: fadeIn 0.3s ease;
 }
 
-.modal-header {
+.modal-container-att .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.modal-header h3 {
+.modal-container-att .modal-header h3 {
   margin: 0;
 }
 
@@ -395,34 +424,34 @@
   font-size: 18px;
 }
 
-.modal-body {
+.modal-container-att .modal-body {
   margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.modal-body input,
-.modal-body textarea {
+.modal-container-att .modal-body input,
+.modal-container-att .modal-body textarea {
   padding: 8px;
   border-radius: 6px;
   border: 1px solid #ddd;
   outline: none;
 }
 
-.modal-body input:focus,
-.modal-body textarea:focus {
+.modal-container-att .modal-body input:focus,
+.modal-container-att .modal-body textarea:focus {
   border-color: #0d6efd;
 }
 
-.modal-footer {
+.modal-container-att .modal-footer {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.cancel-btn {
+.modal-container-att .cancel-btn {
   background: #6c757d;
   border: none;
   color: white;
@@ -431,7 +460,7 @@
   cursor: pointer;
 }
 
-.save-btn {
+.modal-container-att .save-btn {
   background: #0d6efd;
   border: none;
   color: white;
@@ -440,7 +469,7 @@
   cursor: pointer;
 }
 
-.save-btn:hover {
+.modal-container-att .save-btn:hover {
   background: #0a58ca;
 }
 
@@ -575,7 +604,7 @@
 /* ===== TABLE RESPONSIVE FIX ===== */
 
 /* Smooth horizontal scroll */
-.table-responsive {
+.attendance-list-section .table-responsive {
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -634,12 +663,12 @@
   }
 
   /* Stack modal buttons */
-  .modal-footer {
+  .modal-container-att .modal-footer {
     flex-direction: column;
     gap: 8px;
   }
 
-  .modal-footer button {
+  .modal-container-att .modal-footer button {
     width: 100%;
   }
 }
@@ -694,7 +723,7 @@
 @media (max-width: 768px) {
 
   /* IMPORTANT: enable scroll */
-  .table-responsive {
+  .attendance-list-section .table-responsive {
     max-height: 65vh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -721,7 +750,7 @@
 /* ===== MOBILE ONLY HEADER STICKY ===== */
 @media (max-width: 768px) {
 
-  .table-responsive {
+  .attendance-list-section .table-responsive {
     max-height: 65vh;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -735,6 +764,80 @@
     background: #fff;
   }
 
+}
+
+/* ===== PRODUCTION RESPONSIVE OVERRIDES ===== */
+.attendance-headingSection,
+.attendance-top-row,
+.attendance-filter,
+.month-navigation {
+  min-width: 0;
+}
+
+.attendance-headingSection > div,
+.attendance-top-row > div,
+.filter-item {
+  min-width: 0;
+}
+
+.attendance-headingSection button,
+.attendance-top-row button,
+.attendance-top-row select,
+.filter-item select {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .attendance-headingSection {
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .attendance-headingSection > div:last-child {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .attendance-headingSection button {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .attendance-top-row,
+  .attendance-filter {
+    align-items: stretch;
+  }
+
+  .attendance-top-row > div,
+  .filter-item {
+    width: 100%;
+  }
+
+  .attendance-top-row select,
+  .filter-item select {
+    width: 100%;
+  }
+
+  .month-navigation {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .attendance-headingSection {
+    padding: 14px;
+  }
+
+  .attendance-headingSection h2 {
+    font-size: 20px;
+  }
+
+  .attendance-top-row {
+    padding: 10px;
+  }
 }
 
 

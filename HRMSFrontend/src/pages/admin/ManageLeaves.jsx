@@ -1,76 +1,59 @@
 import React, { useState, useEffect } from "react";
+import API from "../../utils/axios";
 
 const ManageLeaves = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
+
+  const [leaves, setLeaves] = useState([]);
   const [filteredLeaves, setFilteredLeaves] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [leaves, setLeaves] = useState([
-    {
-      id: 10,
-      employee: "Kratika Sharma",
-      department: "IT",
-      type: "Half Unpaid Leave",
-      from: "2025-01-01",
-      to: "2025-01-01",
-      days: 1,
-      status: "Rejected",
-    },
-    {
-      id: 11,
-      employee: "Kratika Sharma",
-      department: "IT",
-      type: "Unpaid Leave",
-      from: "2025-08-09",
-      to: "2025-08-10",
-      days: 2,
-      status: "Approved",
-    },
-    {
-      id: 20,
-      employee: "Ravi Mehta",
-      department: "HR",
-      type: "Unpaid Leave",
-      from: "2025-10-10",
-      to: "2025-10-11",
-      days: 2,
-      status: "Pending",
-    },
-  ]);
-
-  const handleApprove = (id) => {
-    setLeaves((prev) =>
-      prev.map((leave) =>
-        leave.id === id ? { ...leave, status: "Approved" } : leave,
-      ),
-    );
+  /* ==============================
+     🔥 FETCH ALL LEAVES (ADMIN)
+  ============================== */
+  const fetchLeaves = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/leave");
+      setLeaves(res.data);
+    } catch (error) {
+      console.error("Error fetching leaves", error);
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handleReject = (id) => {
-    setLeaves((prev) =>
-      prev.map((leave) =>
-        leave.id === id ? { ...leave, status: "Rejected" } : leave,
-      ),
-    );
-  };
-
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-CA");
-
-  const departments = [...new Set(leaves.map((l) => l.department))];
-  const employees = [...new Set(leaves.map((l) => l.employee))];
 
   useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  /* ==============================
+     🔥 APPROVE / REJECT
+  ============================== */
+  const handleStatusUpdate = async (id, status) => {
+    try {
+      await API.put(`/leave/${id}/status`, { status });
+
+      // 🔥 instant UI update
+      setLeaves((prev) =>
+        prev.map((leave) =>
+          leave._id === id ? { ...leave, status } : leave
+        )
+      );
+    } catch (error) {
+      console.error("Error updating status", error);
+      alert("Failed to update status");
+    }
+  };
+
+  /* ==============================
+     🔥 FILTER LOGIC
+  ============================== */
+  useEffect(() => {
     let data = leaves;
-
-    if (selectedDepartment) {
-      data = data.filter((l) => l.department === selectedDepartment);
-    }
-
-    if (selectedEmployee) {
-      data = data.filter((l) => l.employee === selectedEmployee);
-    }
 
     if (selectedStatus) {
       data = data.filter((l) => l.status === selectedStatus);
@@ -79,58 +62,37 @@ const ManageLeaves = () => {
     if (searchTerm) {
       data = data.filter(
         (l) =>
-          l.employee.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          l.status.toLowerCase().includes(searchTerm.toLowerCase()),
+          l.employee?.firstName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          l.employee?.lastName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase())
       );
     }
 
     setFilteredLeaves(data);
-  }, [
-    searchTerm,
-    selectedDepartment,
-    selectedEmployee,
-    selectedStatus,
-    leaves,
-  ]);
+  }, [searchTerm, selectedStatus, leaves]);
+
+  /* ==============================
+     🔥 DATE FORMAT
+  ============================== */
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-CA");
 
   return (
     <div className="container-fluid p-3 p-md-4">
       <div className="card shadow-sm">
         <div className="card-body">
-          {/* Header */}
-          <div className="d-flex flex-column flex-lg-row gap-2 justify-content-between align-items-stretch align-items-lg-center mb-3">
-            <h5 className="fw-semibold mb-0 text-primary text-center text-lg-start">
-              Manage Leaves
-            </h5>
 
-            <div className="d-flex flex-column flex-lg-row gap-2 w-100 w-lg-auto">
-              {/* Department */}
-              <select
-                className="form-select w-100 w-lg-auto"
-                value={selectedDepartment}
-                onChange={(e) => setSelectedDepartment(e.target.value)}
-              >
-                <option value="">All Departments</option>
-                {departments.map((dept, i) => (
-                  <option key={i}>{dept}</option>
-                ))}
-              </select>
+          {/* HEADER */}
+          <div className="d-flex flex-column flex-lg-row gap-2 justify-content-between align-items-center mb-3">
+            <h5 className="fw-semibold text-primary">Manage Leaves</h5>
 
-              {/* Employee */}
-              <select
-                className="form-select w-100 w-lg-auto"
-                value={selectedEmployee}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-              >
-                <option value="">All Employees</option>
-                {employees.map((emp, i) => (
-                  <option key={i}>{emp}</option>
-                ))}
-              </select>
+            <div className="d-flex flex-wrap gap-2">
 
-              {/* Status */}
               <select
-                className="form-select w-100 w-lg-auto"
+                className="form-select"
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
               >
@@ -140,87 +102,107 @@ const ManageLeaves = () => {
                 <option>Rejected</option>
               </select>
 
-              {/* Search */}
               <input
                 type="text"
-                className="form-control w-100 w-lg-auto"
+                className="form-control"
                 placeholder="Search employee"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+
             </div>
           </div>
 
-          {/* Table */}
+          {/* TABLE */}
           <div className="table-responsive">
-            <table className="table table-bordered table-hover align-middle text-nowrap">
-              <thead className="table-light">
-                <tr>
-                  <th>Leave ID</th>
-                  <th>Employee</th>
-                  <th>Leave Type</th>
-                  <th>From Date</th>
-                  <th>To Date</th>
-                  <th>Days</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+            {loading ? (
+              <p className="text-center">Loading...</p>
+            ) : (
+              <table className="table table-bordered table-hover align-middle text-nowrap">
+                <thead className="table-light">
+                  <tr>
+                    <th>ID</th>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Days</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {filteredLeaves.length > 0 ? (
-                  filteredLeaves.map((leave) => (
-                    <tr key={leave.id}>
-                      <td>{leave.id}</td>
-                      <td>{leave.employee}</td>
-                      <td>{leave.type}</td>
-                      <td>{formatDate(leave.from)}</td>
-                      <td>{formatDate(leave.to)}</td>
-                      <td>{leave.days}</td>
+                <tbody>
+                  {filteredLeaves.length > 0 ? (
+                    filteredLeaves.map((leave) => (
+                      <tr key={leave._id}>
+                        <td>{leave._id.slice(-5)}</td>
 
-                      <td>
-                        <span
-                          className={`badge ${
-                            leave.status === "Approved"
-                              ? "bg-success"
-                              : leave.status === "Rejected"
+                        <td>
+                          {leave.employee?.firstName}{" "}
+                          {leave.employee?.lastName}
+                        </td>
+
+                        <td>{leave.leaveType}</td>
+
+                        <td>{formatDate(leave.fromDate)}</td>
+                        <td>{formatDate(leave.toDate)}</td>
+
+                        <td>{leave.totalDays}</td>
+
+                        <td>
+                          <span
+                            className={`badge ${
+                              leave.status === "Approved"
+                                ? "bg-success"
+                                : leave.status === "Rejected"
                                 ? "bg-danger"
                                 : "bg-warning text-dark"
-                          }`}
-                        >
-                          {leave.status}
-                        </span>
-                      </td>
-
-                      <td>
-                        <div className="d-flex flex-row flex-nowrap gap-2 justify-content-center">
-                          <button
-                            className="btn btn-sm btn-link text-success p-0"
-                            onClick={() => handleApprove(leave.id)}
+                            }`}
                           >
-                            Approve
-                          </button>
+                            {leave.status}
+                          </span>
+                        </td>
 
-                          <button
-                            className="btn btn-sm btn-link text-danger p-0"
-                            onClick={() => handleReject(leave.id)}
-                          >
-                            Reject
-                          </button>
-                        </div>
+                        <td>
+                          <div className="d-flex gap-2 justify-content-center">
+
+                            <button
+                              className="btn btn-sm btn-success"
+                              disabled={leave.status === "Approved"}
+                              onClick={() =>
+                                handleStatusUpdate(leave._id, "Approved")
+                              }
+                            >
+                              Approve
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-danger"
+                              disabled={leave.status === "Rejected"}
+                              onClick={() =>
+                                handleStatusUpdate(leave._id, "Rejected")
+                              }
+                            >
+                              Reject
+                            </button>
+
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center py-3">
+                        No leaves found
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="text-center py-3">
-                      No leaves found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
+
         </div>
       </div>
     </div>

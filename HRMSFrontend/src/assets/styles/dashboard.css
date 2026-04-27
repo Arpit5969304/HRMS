@@ -46,7 +46,7 @@
 }
 
 /* ================= CARD ================= */
-.card {
+.dashboard-page .card {
   width: 100%;
   border-radius: 12px;
   padding: 16px;
@@ -57,13 +57,13 @@
 }
 
 /* Hover */
-.card:hover {
+.dashboard-page .card:hover {
   transform: translateY(-3px);
   box-shadow: 0 10px 22px rgba(0,0,0,0.12);
 }
 
 /* Title */
-.card h3 {
+.dashboard-page .card h3 {
   font-size: 15px;
   margin-bottom: 10px;
   font-weight: 600;
@@ -90,13 +90,13 @@
 }
 
 /* Empty */
-.card p {
+.dashboard-page .card p {
   font-size: 13px;
   color: #666;
 }
 
 /* ================= FIX ROW SPACING ================= */
-.row {
+.dashboard-page .row {
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
@@ -134,7 +134,7 @@
     text-align: left;
   }
 
-  .card {
+  .dashboard-page .card {
     padding: 14px;
   }
 }
@@ -145,7 +145,7 @@
     padding: 10px;
   }
 
-  .card {
+  .dashboard-page .card {
     padding: 12px;
   }
 

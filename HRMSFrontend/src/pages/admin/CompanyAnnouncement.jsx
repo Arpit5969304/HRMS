@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import API from "../../utils/axios";
 
 const CompanyAnnouncement = () => {
 
@@ -14,19 +15,31 @@ const CompanyAnnouncement = () => {
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState({});
   const [editId, setEditId] = useState(null);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [announcements, setAnnouncements] = useState([
-    {
-      id: 1,
-      title: "Office Holiday",
-      message: "Office will remain closed on 26 January.",
-      department: "All",
-      priority: "High",
-      date: "20 Jan 2026",
-      expiryDate: "2026-01-26"
+  /* ==============================
+     🔥 FETCH DATA
+  ============================== */
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/announcements");
+      setAnnouncements(res.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  /* ==============================
+     🔥 HANDLE CHANGE
+  ============================== */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -41,8 +54,10 @@ const CompanyAnnouncement = () => {
     });
   };
 
+  /* ==============================
+     🔥 VALIDATION
+  ============================== */
   const validate = () => {
-
     let newErrors = {};
 
     if (!formData.title.trim()) {
@@ -66,7 +81,10 @@ const CompanyAnnouncement = () => {
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  /* ==============================
+     🔥 SUBMIT (CREATE / UPDATE)
+  ============================== */
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const validationErrors = validate();
@@ -76,43 +94,56 @@ const CompanyAnnouncement = () => {
       return;
     }
 
-    if (editId) {
+    try {
+      if (editId) {
+        await API.put(`/announcements/${editId}`, formData);
+      } else {
+        await API.post("/announcements", formData);
+      }
 
-      const updated = announcements.map((a) =>
-        a.id === editId ? { ...a, ...formData } : a
-      );
-
-      setAnnouncements(updated);
+      fetchAnnouncements();
+      setFormData(initialState);
       setEditId(null);
-
-    } else {
-
-      const newAnnouncement = {
-        id: Date.now(),
-        ...formData,
-        date: new Date().toLocaleDateString()
-      };
-
-      setAnnouncements([...announcements, newAnnouncement]);
+      setErrors({});
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Error saving announcement");
     }
-
-    setFormData(initialState);
-    setErrors({});
   };
 
-  const handleDelete = (id) => {
+  /* ==============================
+     🔥 DELETE
+  ============================== */
+  const handleDelete = async (id) => {
 
-    if (!window.confirm("Are you sure you want to delete this announcement?"))
-      return;
+    if (!window.confirm("Delete this announcement?")) return;
 
-    const filtered = announcements.filter((a) => a.id !== id);
-    setAnnouncements(filtered);
+    try {
+      await API.delete(`/announcements/${id}`);
+      fetchAnnouncements();
+    } catch (error) {
+      console.error(error);
+      alert("Delete failed");
+    }
   };
 
+  /* ==============================
+     🔥 EDIT
+  ============================== */
   const handleEdit = (item) => {
-    setFormData(item);
-    setEditId(item.id);
+    setFormData({
+      title: item.title,
+      message: item.message,
+      department: item.department,
+      priority: item.priority,
+      expiryDate: item.expiryDate?.slice(0, 10),
+    });
+
+    setEditId(item._id);
   };
+
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-CA");
 
   return (
     <div className="container py-4">
@@ -127,14 +158,11 @@ const CompanyAnnouncement = () => {
 
         <div className="card-body">
 
-          {/* Form */}
-
+          {/* FORM */}
           <form onSubmit={handleSubmit} className="row g-3 mb-4">
 
-            {/* Title */}
             <div className="col-md-6">
               <label className="form-label">Title</label>
-
               <input
                 type="text"
                 className="form-control"
@@ -142,18 +170,11 @@ const CompanyAnnouncement = () => {
                 value={formData.title}
                 onChange={handleChange}
               />
-
-              {errors.title && (
-                <small className="text-danger">
-                  {errors.title}
-                </small>
-              )}
+              {errors.title && <small className="text-danger">{errors.title}</small>}
             </div>
 
-            {/* Department */}
             <div className="col-md-3">
               <label className="form-label">Department</label>
-
               <select
                 className="form-select"
                 name="department"
@@ -167,10 +188,8 @@ const CompanyAnnouncement = () => {
               </select>
             </div>
 
-            {/* Priority */}
             <div className="col-md-3">
               <label className="form-label">Priority</label>
-
               <select
                 className="form-select"
                 name="priority"
@@ -183,10 +202,8 @@ const CompanyAnnouncement = () => {
               </select>
             </div>
 
-            {/* Message */}
             <div className="col-md-9">
               <label className="form-label">Message</label>
-
               <textarea
                 className="form-control"
                 rows="3"
@@ -194,18 +211,11 @@ const CompanyAnnouncement = () => {
                 value={formData.message}
                 onChange={handleChange}
               />
-
-              {errors.message && (
-                <small className="text-danger">
-                  {errors.message}
-                </small>
-              )}
+              {errors.message && <small className="text-danger">{errors.message}</small>}
             </div>
 
-            {/* Expiry */}
             <div className="col-md-3">
               <label className="form-label">Expiry Date</label>
-
               <input
                 type="date"
                 className="form-control"
@@ -213,105 +223,91 @@ const CompanyAnnouncement = () => {
                 value={formData.expiryDate}
                 onChange={handleChange}
               />
-
-              {errors.expiryDate && (
-                <small className="text-danger">
-                  {errors.expiryDate}
-                </small>
-              )}
+              {errors.expiryDate && <small className="text-danger">{errors.expiryDate}</small>}
             </div>
 
-            {/* Button */}
             <div className="col-12 text-end">
-
               <button className="btn btn-primary">
                 {editId ? "Update Announcement" : "Create Announcement"}
               </button>
-
             </div>
 
           </form>
 
-          {/* Table */}
-
+          {/* TABLE */}
           <div className="table-responsive">
+            {loading ? (
+              <p className="text-center">Loading...</p>
+            ) : (
+              <table className="table table-bordered table-hover">
 
-            <table className="table table-bordered table-hover">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Title</th>
+                    <th>Department</th>
+                    <th>Priority</th>
+                    <th>Created</th>
+                    <th>Expiry</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-              <thead className="table-light">
-                <tr>
-                  <th>#</th>
-                  <th>Title</th>
-                  <th>Department</th>
-                  <th>Priority</th>
-                  <th>Date</th>
-                  <th>Expiry</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
+                <tbody>
+                  {announcements.length > 0 ? (
+                    announcements.map((item, index) => (
+                      <tr key={item._id}>
 
-              <tbody>
+                        <td>{index + 1}</td>
+                        <td>{item.title}</td>
+                        <td>{item.department}</td>
 
-                {announcements.length > 0 ? (
-                  announcements.map((item, index) => (
-                    <tr key={item.id}>
-
-                      <td>{index + 1}</td>
-
-                      <td>{item.title}</td>
-
-                      <td>{item.department}</td>
-
-                      <td>
-                        <span
-                          className={`badge ${
+                        <td>
+                          <span className={`badge ${
                             item.priority === "High"
                               ? "bg-danger"
                               : item.priority === "Medium"
                               ? "bg-warning text-dark"
                               : "bg-secondary"
-                          }`}
-                        >
-                          {item.priority}
-                        </span>
+                          }`}>
+                            {item.priority}
+                          </span>
+                        </td>
+
+                        <td>{formatDate(item.createdAt)}</td>
+                        <td>{formatDate(item.expiryDate)}</td>
+
+                        <td className="d-flex gap-2">
+
+                          <button
+                            className="btn btn-sm btn-warning"
+                            onClick={() => handleEdit(item)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="btn btn-sm btn-danger"
+                            onClick={() => handleDelete(item._id)}
+                          >
+                            Delete
+                          </button>
+
+                        </td>
+
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center">
+                        No announcements available
                       </td>
-
-                      <td>{item.date}</td>
-
-                      <td>{item.expiryDate}</td>
-
-                      <td className="d-flex gap-2">
-
-                        <button
-                          className="btn btn-sm btn-warning"
-                          onClick={() => handleEdit(item)}
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          className="btn btn-sm btn-danger"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </button>
-
-                      </td>
-
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="text-center text-muted">
-                      No announcements available
-                    </td>
-                  </tr>
-                )}
+                  )}
+                </tbody>
 
-              </tbody>
-
-            </table>
-
+              </table>
+            )}
           </div>
 
         </div>

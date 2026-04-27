@@ -1,56 +1,116 @@
 import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
 import "../../assets/styles/EmployeeRemarks.css";
-import axios from "axios";
+import API from "../../utils/axios";
+import { useAuth } from "../../context/AuthContext";
 
 const EmployeeRemarkside = () => {
+  const { user } = useAuth();
+  const employeeId = user?.employeeId;
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [reasonInputs, setReasonInputs] = useState({});
 
-  // 🔥 Replace with logged-in employeeId
-  const employeeId = "EMPC39932";
+  /* =========================
+     FETCH DATA
+  ========================= */
+  const fetchRemarks = async () => {
+    if (!employeeId) return;
 
-  // ✅ FETCH DATA
+    try {
+      setLoading(true);
+      setError("");
 
+      const res = await API.get(`/remarks/employee/${employeeId}`);
+
+      setData(res?.data?.data || []);
+    } catch (err) {
+      console.error("API ERROR:", err.response?.data || err.message);
+
+      setError(
+        err.response?.data?.message ||
+        "Failed to load attendance data"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* =========================
+     WAIT for employeeId
+  ========================= */
   useEffect(() => {
-    const dummyData = [
-      {
-        _id: "1",
-        date: "2026-02-27",
-        checkIn: "2026-02-27T08:32:00",
-        checkOut: "2026-02-27T14:28:00",
-        remark: "Test remark",
-        approved: false,
-      },
-      {
-        _id: "2",
-        date: "2026-02-28",
-        checkIn: "2026-02-28T09:00:00",
-        checkOut: "2026-02-28T17:00:00",
-        remark: "On time",
-        approved: true,
-      },
-    ];
+    if (employeeId) {
+      fetchRemarks();
+    }
+  }, [employeeId]);
 
-    setData(dummyData);
-  }, []);
+  /* =========================
+     HANDLE INPUT
+  ========================= */
+  const handleReasonChange = (id, value) => {
+    setReasonInputs((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+  /* =========================
+     SUBMIT REASON
+  ========================= */
+  const submitReason = async (id) => {
+    const reason = reasonInputs[id];
+
+    if (!reason || !reason.trim()) {
+      return alert("Please enter reason");
+    }
+
+    try {
+      await API.post(`/remarks/employee/reason/${id}`, { reason });
+
+      // update UI instantly
+      setData((prev) =>
+        prev.map((item) =>
+          item._id === id ? { ...item, reason } : item
+        )
+      );
+
+      setReasonInputs((prev) => ({ ...prev, [id]: "" }));
+
+      alert("Reason submitted successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to submit reason");
+    }
+  };
 
   return (
     <div className="container py-3 py-md-5">
       <div className="card shadow-sm border-0 employee-card">
-        {/* Header */}
-        <div className="card-header bg-primary text-white fw-semibold">
-          My Attendance & Remarks
+
+        {/* HEADER */}
+        <div className="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+          <span className="fw-semibold">My Attendance & Remarks</span>
+          <button className="btn btn-light btn-sm" onClick={fetchRemarks}>
+            Refresh
+          </button>
         </div>
 
-        {/* Table */}
-        <div className="table-responsive mt-3">
-          <table className="table align-middle employee-table text-nowrap">
-            <thead>
+        {/* ERROR */}
+        {error && (
+          <div className="alert alert-danger m-3">{error}</div>
+        )}
+
+        {/* TABLE */}
+        <div className="table-responsive">
+          <table className="table align-middle employee-table text-nowrap mb-0">
+            <thead className="table-light">
               <tr>
                 <th>Date</th>
                 <th>Check In</th>
                 <th>Check Out</th>
+                <th>Reason</th>
                 <th>Remark</th>
                 <th>Status</th>
               </tr>
@@ -59,52 +119,93 @@ const EmployeeRemarkside = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">
-                    Loading...
+                  <td colSpan="6" className="text-center py-4">
+                    <div className="spinner-border text-primary"></div>
                   </td>
                 </tr>
               ) : data.length > 0 ? (
                 data.map((item) => (
                   <tr key={item._id}>
-                    <td>{new Date(item.date).toLocaleDateString()}</td>
 
+                    {/* DATE */}
+                    <td>
+                      {new Date(item.date).toLocaleDateString()}
+                    </td>
+
+                    {/* CHECK IN */}
                     <td className="text-success fw-semibold">
                       {item.checkIn
                         ? new Date(item.checkIn).toLocaleTimeString()
                         : "-"}
                     </td>
 
+                    {/* CHECK OUT */}
                     <td className="text-danger fw-semibold">
                       {item.checkOut
                         ? new Date(item.checkOut).toLocaleTimeString()
                         : "-"}
                     </td>
 
+                    {/* REASON */}
                     <td>
-                      {item.remark || (
+                      {item.reason ? (
+                        <span className="fw-semibold">{item.reason}</span>
+                      ) : item.approved ? (
+                        <span className="text-muted">Locked</span>
+                      ) : (
+                        <div className="d-flex gap-2">
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            placeholder="Enter reason"
+                            value={reasonInputs[item._id] || ""}
+                            onChange={(e) =>
+                              handleReasonChange(item._id, e.target.value)
+                            }
+                          />
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => submitReason(item._id)}
+                          >
+                            Submit
+                          </button>
+                        </div>
+                      )}
+                    </td>
+
+                    {/* REMARK */}
+                    <td>
+                      {item.remark ? (
+                        item.remark
+                      ) : (
                         <span className="text-muted">No remark</span>
                       )}
                     </td>
 
+                    {/* STATUS */}
                     <td>
                       <span
                         className={`badge ${
-                          item.approved ? "bg-success" : "bg-warning text-dark"
+                          item.approved
+                            ? "bg-success"
+                            : "bg-warning text-dark"
                         }`}
                       >
                         {item.approved ? "Approved" : "Pending"}
                       </span>
                     </td>
+
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center text-muted py-4">
+                  <td colSpan="6" className="text-center text-muted py-4">
                     No records found
                   </td>
                 </tr>
               )}
             </tbody>
+
           </table>
         </div>
       </div>

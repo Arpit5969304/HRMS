@@ -25,7 +25,7 @@ const taskSchema = new mongoose.Schema(
 
     department: {
       type: String,
-      enum: ["HR", "IT", "Finance"],
+      enum: ["HR", "IT", "Finance"], // can be dynamic later
       required: true,
       index: true,
     },
@@ -44,7 +44,11 @@ const taskSchema = new mongoose.Schema(
         validator: function (value) {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          return value >= today;
+
+          const input = new Date(value);
+          input.setHours(0, 0, 0, 0);
+
+          return input >= today;
         },
         message: "Deadline cannot be in the past",
       },
@@ -58,10 +62,16 @@ const taskSchema = new mongoose.Schema(
       index: true,
     },
 
-    // 🔥 who assigned task
+    // 🔥 who assigned task (admin / manager)
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
+      required: true,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   { timestamps: true }
@@ -72,5 +82,16 @@ const taskSchema = new mongoose.Schema(
 ============================== */
 taskSchema.index({ employee: 1, status: 1 });
 taskSchema.index({ department: 1, status: 1 });
+
+/* ==============================
+   🔥 NORMALIZE DEADLINE
+============================== */
+taskSchema.pre("save", function () {
+  if (this.deadline) {
+    const d = new Date(this.deadline);
+    d.setHours(0, 0, 0, 0);
+    this.deadline = d;
+  }
+});
 
 export default mongoose.model("Task", taskSchema);

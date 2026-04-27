@@ -1,49 +1,64 @@
 import React, { useState, useMemo, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../assets/styles/EmployeeRemarks.css";
+import API from "../../utils/axios";
 
 const EmployeeRemarkAdminSide = () => {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // ✅ MOCK API FETCH (replace with real API)
+  /* ==============================
+     FETCH DATA
+  ============================== */
+  const fetchRemarks = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await API.get("/remarks/admin");
+
+      const records = res?.data?.data?.records || [];
+
+      const formatted = records.map((item) => ({
+        id: item._id,
+        name: `${item.employee?.firstName || ""} ${item.employee?.lastName || ""}`,
+        department: item.employee?.department || "Unknown",
+        date: new Date(item.date).toLocaleDateString(),
+        checkIn: item.checkIn
+          ? new Date(item.checkIn).toLocaleTimeString()
+          : "-",
+        checkOut: item.checkOut
+          ? new Date(item.checkOut).toLocaleTimeString()
+          : "-",
+        reason: item.reason || "", // 🔥 NEW
+        remark: item.remark || "",
+        approved: item.approved,
+        selected: false,
+      }));
+
+      setEmployees(formatted);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch remarks");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const mockData = [
-      {
-        id: 1,
-        name: "Gyasi Kumar",
-        department: "IT",
-        date: "2026-02-27",
-        checkIn: "08:32",
-        checkOut: "14:28",
-        remark: "Test",
-        approved: false,
-        selected: false,
-      },
-      {
-        id: 2,
-        name: "Ravi Singh",
-        department: "HR",
-        date: "2026-02-27",
-        checkIn: "09:00",
-        checkOut: "17:00",
-        remark: "On time",
-        approved: false,
-        selected: false,
-      },
-    ];
-
-    setEmployees(mockData);
+    fetchRemarks();
   }, []);
 
-  // ✅ Optimized departments
+  /* ==============================
+     FILTERS
+  ============================== */
   const departments = useMemo(() => {
     return [...new Set(employees.map((emp) => emp.department))];
   }, [employees]);
 
-  // ✅ Filtering
   const filteredEmployees = useMemo(() => {
     return employees.filter((emp) => {
       const matchesDepartment =
@@ -57,16 +72,9 @@ const EmployeeRemarkAdminSide = () => {
     });
   }, [employees, search, selectedDepartment]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!search.trim()) {
-      setError("Please enter employee name");
-      return;
-    }
-    setError("");
-  };
-
-  // ✅ Select single
+  /* ==============================
+     SELECT
+  ============================== */
   const toggleSelect = (id) => {
     setEmployees((prev) =>
       prev.map((emp) =>
@@ -75,7 +83,6 @@ const EmployeeRemarkAdminSide = () => {
     );
   };
 
-  // ✅ Select ALL (only filtered)
   const toggleSelectAll = (checked) => {
     setEmployees((prev) =>
       prev.map((emp) =>
@@ -86,20 +93,21 @@ const EmployeeRemarkAdminSide = () => {
     );
   };
 
-  // ✅ Approve selected
+  /* ==============================
+     APPROVE
+  ============================== */
   const approveSelected = async () => {
     const selectedEmployees = employees.filter((emp) => emp.selected);
 
-    if (selectedEmployees.length === 0) return;
+    if (selectedEmployees.length === 0) {
+      return alert("Select at least one record");
+    }
 
-    if (
-      window.confirm(
-        `Approve ${selectedEmployees.length} selected employee(s)?`
-      )
-    ) {
+    if (window.confirm(`Approve ${selectedEmployees.length} records?`)) {
       try {
-        // 👉 Replace with API call
-        // await fetch("/api/approve", {...})
+        const ids = selectedEmployees.map((emp) => emp.id);
+
+        await API.post("/remarks/admin/approve", { ids });
 
         setEmployees((prev) =>
           prev.map((emp) =>
@@ -108,68 +116,77 @@ const EmployeeRemarkAdminSide = () => {
               : emp
           )
         );
+
+        alert("Approved successfully");
       } catch (err) {
         console.error(err);
+        alert("Approval failed");
       }
     }
   };
 
-  // ✅ Update remark (inline edit)
-  const updateRemark = (id, value) => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === id ? { ...emp, remark: value } : emp
-      )
-    );
+  /* ==============================
+     UPDATE REMARK (onBlur)
+  ============================== */
+  const updateRemark = async (id, value) => {
+    try {
+      await API.put(`/remarks/admin/${id}`, { remark: value });
+
+      setEmployees((prev) =>
+        prev.map((emp) =>
+          emp.id === id ? { ...emp, remark: value } : emp
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Update failed");
+    }
   };
 
   return (
-    <div className="container py-3 py-md-5">
-      <div className="card shadow-sm border-0 employee-card">
-        {/* Header */}
-        <div className="d-flex flex-column flex-md-row gap-2 align-items-stretch align-items-md-center">
-          <select
-            className="form-select w-100 w-md-auto"
-            style={{ maxWidth: "180px" }}
-            value={selectedDepartment}
-            onChange={(e) => setSelectedDepartment(e.target.value)}
-          >
-            <option value="">All Departments</option>
-            {departments.map((dept, index) => (
-              <option key={index} value={dept}>
-                {dept}
-              </option>
-            ))}
-          </select>
+    <div className="container-fluid py-4">
+      <div className="card shadow border-0 rounded-4 employee-card">
 
-          <form
-            className="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto"
-            style={{ maxWidth: "350px" }}
-            onSubmit={handleSearch}
-          >
+        {/* HEADER */}
+        <div className="card-header bg-white border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h5 className="fw-bold mb-1">Employee Remarks</h5>
+            <small className="text-muted">Manage employee remarks</small>
+          </div>
+
+          <div className="d-flex gap-2 flex-wrap">
+            <select
+              className="form-select"
+              style={{ maxWidth: "180px" }}
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept, i) => (
+                <option key={i}>{dept}</option>
+              ))}
+            </select>
+
             <input
               type="text"
-              className="form-control w-100"
-              placeholder="Search employee..."
+              className="form-control"
+              placeholder="Search..."
               value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setError("");
-              }}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ maxWidth: "200px" }}
             />
-
-            <button className="btn btn-primary w-100 w-sm-auto">
-              Search
-            </button>
-          </form>
+          </div>
         </div>
 
-        {error && <div className="alert alert-danger m-3">{error}</div>}
+        {/* ERROR */}
+        {error && (
+          <div className="alert alert-danger m-3">{error}</div>
+        )}
 
-        {/* Table */}
-        <div className="table-responsive mt-3">
-          <table className="table align-middle employee-table text-nowrap">
-            <thead>
+        {/* TABLE */}
+        <div className="table-responsive px-3">
+          <table className="table align-middle">
+            <thead className="table-light">
               <tr>
                 <th>
                   <input
@@ -185,13 +202,20 @@ const EmployeeRemarkAdminSide = () => {
                 <th>Date</th>
                 <th>Check In</th>
                 <th>Check Out</th>
+                <th>Reason</th>
                 <th>Remark</th>
                 <th>Status</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredEmployees.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="text-center py-4">
+                    <div className="spinner-border text-primary" />
+                  </td>
+                </tr>
+              ) : filteredEmployees.length > 0 ? (
                 filteredEmployees.map((emp) => (
                   <tr key={emp.id}>
                     <td>
@@ -203,29 +227,30 @@ const EmployeeRemarkAdminSide = () => {
                     </td>
 
                     <td className="fw-semibold">{emp.name}</td>
-
                     <td>{emp.date}</td>
+                    <td className="text-success">{emp.checkIn}</td>
+                    <td className="text-danger">{emp.checkOut}</td>
 
-                    <td className="text-success fw-semibold">
-                      {emp.checkIn}
+                    {/* 🔥 REASON */}
+                    <td>
+                      {emp.reason || (
+                        <span className="text-muted">No reason</span>
+                      )}
                     </td>
 
-                    <td className="text-danger fw-semibold">
-                      {emp.checkOut}
-                    </td>
-
-                    {/* ✅ Editable Remark */}
+                    {/* 🔥 REMARK */}
                     <td>
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={emp.remark}
-                        onChange={(e) =>
+                        defaultValue={emp.remark}
+                        onBlur={(e) =>
                           updateRemark(emp.id, e.target.value)
                         }
                       />
                     </td>
 
+                    {/* STATUS */}
                     <td>
                       <span
                         className={`badge ${
@@ -241,8 +266,8 @@ const EmployeeRemarkAdminSide = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center text-muted py-4">
-                    No employees found
+                  <td colSpan="8" className="text-center py-4">
+                    No records found
                   </td>
                 </tr>
               )}
@@ -250,12 +275,13 @@ const EmployeeRemarkAdminSide = () => {
           </table>
         </div>
 
-        {/* ✅ Approve Button */}
-        <div className="p-3">
+        {/* FOOTER */}
+        <div className="card-footer text-end">
           <button className="btn btn-success" onClick={approveSelected}>
             Approve Selected
           </button>
         </div>
+
       </div>
     </div>
   );

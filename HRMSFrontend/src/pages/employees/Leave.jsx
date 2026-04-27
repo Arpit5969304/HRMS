@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../assets/styles/Leave.css";
+import API from "../../utils/axios";
 
 const Leave = () => {
   const [activeTab, setActiveTab] = useState("apply");
@@ -11,16 +12,44 @@ const Leave = () => {
     reason: "",
   });
 
+  const [leaveHistory, setLeaveHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  /* ==============================
+     🔥 FETCH MY LEAVES
+  ============================== */
+  const fetchLeaves = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/leave/my");
+      setLeaveHistory(res.data);
+    } catch (error) {
+      console.error("Error fetching leaves", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  /* ==============================
+     🔥 HANDLE INPUT
+  ============================== */
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setLeaveForm((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = (e) => {
+  /* ==============================
+     🔥 APPLY LEAVE
+  ============================== */
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!leaveForm.leaveType || !leaveForm.fromDate || !leaveForm.toDate) {
@@ -28,16 +57,58 @@ const Leave = () => {
       return;
     }
 
-    console.log("Leave Submitted:", leaveForm);
+    const start = new Date(leaveForm.fromDate);
+    const end = new Date(leaveForm.toDate);
 
-    setLeaveForm({
-      leaveType: "",
-      fromDate: "",
-      toDate: "",
-      reason: "",
-    });
+    // normalize
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (start < today) {
+      alert("Leave cannot start in the past");
+      return;
+    }
+
+    if (end < start) {
+      alert("To date cannot be before From date");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      await API.post("/leave", {
+        leaveType: leaveForm.leaveType,
+        fromDate: leaveForm.fromDate,
+        toDate: leaveForm.toDate,
+        reason: leaveForm.reason?.trim(),
+      });
+
+      alert("Leave Applied Successfully");
+
+      setLeaveForm({
+        leaveType: "",
+        fromDate: "",
+        toDate: "",
+        reason: "",
+      });
+
+      await fetchLeaves();
+      setActiveTab("history");
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Error applying leave");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  /* ==============================
+     🔥 CANCEL
+  ============================== */
   const handleCancel = () => {
     setLeaveForm({
       leaveType: "",
@@ -47,74 +118,43 @@ const Leave = () => {
     });
   };
 
-  const leaveHistory = [
-    {
-      type: "Sick Leave",
-      from: "05-02-2026",
-      to: "06-02-2026",
-      status: "Approved",
-      reason: "testing",
-    },
-    {
-      type: "Sick Leave",
-      from: "05-02-2026",
-      to: "06-02-2026",
-      status: "Pending",
-      reason: "testing",
-    },
-    {
-      type: "Half Unpaid Leave",
-      from: "18-10-2025",
-      to: "18-10-2025",
-      status: "Approved",
-      reason: "testing",
-    },
-    {
-      type: "Unpaid Leave",
-      from: "10-10-2025",
-      to: "11-10-2025",
-      status: "Pending",
-      reason: "out of town",
-    },
-    {
-      type: "Half Unpaid Leave",
-      from: "18-10-2025",
-      to: "18-10-2025",
-      status: "Approved",
-      reason: "testing",
-    },
-  ];
-
-  // calculate leave days
+  /* ==============================
+     🔥 CALCULATE DAYS
+  ============================== */
   const getLeaveDays = (from, to) => {
-    const start = new Date(from.split("-").reverse().join("-"));
-    const end = new Date(to.split("-").reverse().join("-"));
+    const start = new Date(from);
+    const end = new Date(to);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
 
     const diff = end - start;
-
     return diff / (1000 * 60 * 60 * 24) + 1;
   };
 
+  /* ==============================
+     🔥 LEAVE SUMMARY
+  ============================== */
   let paidLeave = 0;
   let unpaidLeave = 0;
 
   leaveHistory.forEach((leave) => {
     if (leave.status === "Approved") {
-      const days = getLeaveDays(leave.from, leave.to);
+      const days = getLeaveDays(leave.fromDate, leave.toDate);
 
       if (
-        leave.type === "Paid Leave" ||
-        leave.type === "Sick Leave" ||
-        leave.type === "Casual Leave"
+        leave.leaveType === "Paid Leave" ||
+        leave.leaveType === "Sick Leave" ||
+        leave.leaveType === "Casual Leave"
       ) {
         paidLeave += days;
       }
 
-      if (leave.type === "Unpaid Leave") {
+      if (leave.leaveType === "Unpaid Leave") {
         unpaidLeave += days;
       }
 
-      if (leave.type === "Half Unpaid Leave") {
+      if (leave.leaveType === "Half Unpaid Leave") {
         unpaidLeave += 0.5;
       }
     }
@@ -141,7 +181,7 @@ const Leave = () => {
         </button>
       </div>
 
-      {/* Card */}
+      {/* APPLY FORM */}
       {activeTab === "apply" && (
         <div className="leave-card-wrapper">
           <div className="leave-card-heading">Apply for Leave</div>
@@ -184,19 +224,24 @@ const Leave = () => {
             </div>
 
             <div className="form-group">
-              <label>Reason for leave</label>
+              <label>Reason</label>
               <textarea
                 rows="4"
                 name="reason"
                 value={leaveForm.reason}
                 onChange={handleChange}
-              ></textarea>
+              />
             </div>
 
             <div className="btn-group">
-              <button type="submit" className="apply-btn">
-                Apply Leave
+              <button
+                type="submit"
+                className="apply-btn"
+                disabled={submitting}
+              >
+                {submitting ? "Applying..." : "Apply Leave"}
               </button>
+
               <button
                 type="button"
                 className="cancel-btn"
@@ -209,57 +254,63 @@ const Leave = () => {
         </div>
       )}
 
-      {/* History Table */}
+      {/* HISTORY */}
       {activeTab === "history" && (
         <div className="history-card">
-          <table className="history-table">
-            <thead>
-              {/* 🔥 TOP HEADER (your div moved here) */}
-              <tr>
-                <th colSpan="6" className="history-card-head">
-                  <div className="header-inner">
-                    Leave History
-                    <span className="leave-count paid">Paid: {paidLeave}</span>
-                    <span className="leave-count unpaid">
-                      Unpaid: {unpaidLeave}
-                    </span>
-                    <span className="leave-count total">
-                      Total Leave: {totalLeave} day
-                    </span>
-                  </div>
-                </th>
-              </tr>
-
-              {/* 🔥 COLUMN HEADER */}
-              <tr>
-                <th>Leave Type</th>
-                <th>From</th>
-                <th>To</th>
-                <th>Days</th>
-                <th>Status</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {leaveHistory.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.type}</td>
-                  <td>{item.from}</td>
-                  <td>{item.to}</td>
-                  <td>{getLeaveDays(item.from, item.to)}</td>
-                  <td>
-                    <span
-                      className={`status-badge ${item.status.toLowerCase()}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td>{item.reason}</td>
+          {loading ? (
+            <p>Loading...</p>
+          ) : leaveHistory.length === 0 ? (
+            <p style={{ textAlign: "center" }}>No leave history found</p>
+          ) : (
+            <table className="history-table">
+              <thead>
+                <tr>
+                  <th colSpan="6" className="history-card-head">
+                    <div className="header-inner">
+                      Leave History
+                      <span className="leave-count paid">
+                        Paid: {paidLeave}
+                      </span>
+                      <span className="leave-count unpaid">
+                        Unpaid: {unpaidLeave}
+                      </span>
+                      <span className="leave-count total">
+                        Total Leave: {totalLeave} days
+                      </span>
+                    </div>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+
+                <tr>
+                  <th>Leave Type</th>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Days</th>
+                  <th>Status</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {leaveHistory.map((item, index) => (
+                  <tr key={index}>
+                    <td>{item.leaveType}</td>
+                    <td>{item.fromDate?.slice(0, 10)}</td>
+                    <td>{item.toDate?.slice(0, 10)}</td>
+                    <td>{getLeaveDays(item.fromDate, item.toDate)}</td>
+                    <td>
+                      <span
+                        className={`status-badge ${item.status.toLowerCase()}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td>{item.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
     </div>

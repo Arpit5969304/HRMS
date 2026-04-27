@@ -1,52 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
+import API from "../../utils/axios";
 
 const CompanyAnnouncementsEmp = () => {
 
-  // Demo Logged-in Employee
-  const employeeDepartment = "IT";
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [announcements] = useState([
-    {
-      id: 1,
-      title: "Office Holiday",
-      message: "Office will remain closed on 26 January.",
-      department: "All",
-      priority: "High",
-      date: "20 Jan 2026",
-      expiryDate: "2026-01-26"
-    },
-    {
-      id: 2,
-      title: "New HR Policy",
-      message: "New leave policy has been updated. Please review it.",
-      department: "HR",
-      priority: "Medium",
-      date: "10 March 2026",
-      expiryDate: "2026-12-31"
-    },
-    {
-      id: 3,
-      title: "Server Maintenance",
-      message: "System maintenance scheduled tonight from 10 PM.",
-      department: "IT",
-      priority: "Normal",
-      date: "15 March 2026",
-      expiryDate: "2026-03-20"
+  /* ==============================
+     🔥 FETCH ANNOUNCEMENTS
+  ============================== */
+  const fetchAnnouncements = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/announcements");
+      setAnnouncements(res.data);
+    } catch (error) {
+      console.error("Error fetching announcements", error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  // Filter announcements for employee department + expiry
-  const today = new Date();
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
 
-  const visibleAnnouncements = announcements.filter((a) => {
-    const expiry = new Date(a.expiryDate);
-
-    const departmentMatch =
-      a.department === "All" || a.department === employeeDepartment;
-
-    return departmentMatch && expiry >= today;
-  });
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-CA");
 
   return (
     <div className="container py-4">
@@ -61,12 +42,15 @@ const CompanyAnnouncementsEmp = () => {
 
         <div className="card-body">
 
-          {visibleAnnouncements.length > 0 ? (
+          {loading ? (
+            <p className="text-center">Loading...</p>
+          ) : announcements.length > 0 ? (
+
             <div className="row g-3">
 
-              {visibleAnnouncements.map((item) => (
+              {announcements.map((item) => (
 
-                <div key={item.id} className="col-md-6">
+                <div key={item._id} className="col-md-6">
 
                   <div className="card border-0 shadow-sm h-100">
 
@@ -97,7 +81,7 @@ const CompanyAnnouncementsEmp = () => {
                       </p>
 
                       <small className="text-secondary">
-                        📅 {item.date}
+                        📅 {formatDate(item.createdAt)}
                       </small>
 
                     </div>

@@ -22,7 +22,7 @@ const documentSchema = new mongoose.Schema(
       ],
     },
 
-    fileUrl: {
+    filePath: {
       type: String,
       required: true,
     },
@@ -33,11 +33,15 @@ const documentSchema = new mongoose.Schema(
     },
 
     fileType: {
-      type: String, // pdf, jpg etc
+      type: String,
+      enum: ["pdf", "jpg", "jpeg", "png"],
+      required: true,
     },
 
     fileSize: {
-      type: Number, // in bytes
+      type: Number,
+      required: true,
+      max: 5 * 1024 * 1024, // 🔥 5MB limit
     },
 
     status: {
@@ -51,13 +55,19 @@ const documentSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 200,
+      default: "",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
 );
 
 /* ==============================
-   🔥 UNIQUE (1 document per type)
+   🔥 UNIQUE (1 document per type per employee)
 ============================== */
 documentSchema.index(
   { employee: 1, documentName: 1 },
@@ -68,5 +78,16 @@ documentSchema.index(
    🔥 PERFORMANCE INDEXES
 ============================== */
 documentSchema.index({ createdAt: -1 });
+
+/* ==============================
+   🔥 VALIDATION HOOK
+============================== */
+documentSchema.pre("save", function (next) {
+  if (this.status === "Rejected" && !this.rejectionReason) {
+    return next(new Error("Rejection reason is required when status is Rejected"));
+  }
+
+  next();
+});
 
 export default mongoose.model("Document", documentSchema);

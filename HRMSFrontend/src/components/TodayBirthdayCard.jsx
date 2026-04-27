@@ -1,23 +1,25 @@
 import { useState } from "react";
 import "../assets/styles/TodayBirthday.css";
-import useDashboard from "../hooks/useDashboard";
 
-function TodayBirthdayCard() {
-  const { data, loading } = useDashboard(); // ✅ use hook
-  const employees = data.employees || [];
-
+function TodayBirthdayCard({ employees = [] }) {
   const [blessings, setBlessings] = useState({});
 
   const today = new Date();
-  const todayDate = today.getDate();
-  const todayMonth = today.getMonth();
 
-  // 🔥 FILTER TODAY BIRTHDAYS
+  // ✅ FIX: timezone-safe compare
   const todayBirthdays = employees.filter((emp) => {
     if (!emp.dob) return false;
 
     const dob = new Date(emp.dob);
-    return dob.getDate() === todayDate && dob.getMonth() === todayMonth;
+
+    const todayStr = new Date().toDateString();
+    const dobThisYear = new Date(
+      new Date().getFullYear(),
+      dob.getMonth(),
+      dob.getDate(),
+    ).toDateString();
+
+    return todayStr === dobThisYear;
   });
 
   const handleChange = (id, value) => {
@@ -43,29 +45,23 @@ function TodayBirthdayCard() {
     <div className="birthcard">
       <h2>🎂 Today's Birthday</h2>
 
-      {loading ? (
-        <p className="no-data">Loading...</p>
-      ) : todayBirthdays.length > 0 ? (
+      {todayBirthdays.length > 0 ? (
         <div className="birthday-list">
           {todayBirthdays.map((emp) => (
             <div className="birthday-item" key={emp._id}>
-              <h3>{emp.firstName} {emp.lastName}</h3>
+              <h3>
+                {emp.firstName} {emp.lastName}
+              </h3>
               <p>🎉 Wish them a happy birthday!</p>
 
               <input
                 type="text"
                 placeholder="Write your blessing..."
                 value={blessings[emp._id] || ""}
-                onChange={(e) =>
-                  handleChange(emp._id, e.target.value)
-                }
+                onChange={(e) => handleChange(emp._id, e.target.value)}
               />
 
-              <button
-                onClick={() =>
-                  handleSend(emp._id, emp.firstName)
-                }
-              >
+              <button onClick={() => handleSend(emp._id, emp.firstName)}>
                 Send
               </button>
             </div>

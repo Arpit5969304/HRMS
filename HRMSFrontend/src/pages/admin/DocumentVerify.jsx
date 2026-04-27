@@ -1,59 +1,73 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import API from "../../utils/axios";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../../assets/styles/DocumentVarify.css";
 
-
 const DocumentVerify = () => {
-
-  const [documents, setDocuments] = useState([
-    {
-      id: 1,
-      employeeName: "Kritika Sharma",
-      name: "Aadhar Card",
-      fileName: "aadhar.pdf",
-      uploadDate: "12 Feb 2026",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      employeeName: "Rahul Verma",
-      name: "PAN Card",
-      fileName: "pan.pdf",
-      uploadDate: "15 Feb 2026",
-      status: "Verified",
-    },
-     {
-      id: 3,
-      employeeName: "Kritika Sharma",
-      name: "PAN Card",
-      fileName: "aadhar.pdf",
-      uploadDate: "12 Feb 2026",
-      status: "Pending",
-    },
-  ]);
-
+  const [documents, setDocuments] = useState([]);
   const [statusFilter, setStatusFilter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleStatus = (id, status) => {
-    setDocuments((prev) =>
-      prev.map((doc) =>
-        doc.id === id ? { ...doc, status } : doc
-      )
-    );
+  /* ==============================
+     🔥 FETCH ALL DOCUMENTS (ADMIN)
+  ============================== */
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const res = await API.get("/documents/all");
+      setDocuments(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDownload = (fileName) => {
-    alert(`Downloading ${fileName}`);
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  /* ==============================
+     🔥 UPDATE STATUS
+  ============================== */
+  const handleStatus = async (id, status) => {
+    try {
+      let rejectionReason = "";
+
+      if (status === "Rejected") {
+        rejectionReason = prompt("Enter rejection reason:");
+        if (!rejectionReason) return;
+      }
+
+      await API.put(`/documents/status/${id}`, {
+        status,
+        rejectionReason,
+      });
+
+      fetchDocuments();
+
+    } catch (err) {
+      alert("Status update failed");
+    }
   };
 
-  /* ===== FILTER LOGIC ===== */
+  /* ==============================
+     🔥 DOWNLOAD FILE
+  ============================== */
+  const handleDownload = (filePath) => {
+    window.open(filePath, "_blank"); // cloudinary url direct
+  };
+
+  /* ==============================
+     🔥 FILTER LOGIC
+  ============================== */
   const filteredDocs = documents.filter((doc) => {
     const matchStatus = statusFilter
       ? doc.status === statusFilter
       : true;
 
-    const matchSearch = doc.employeeName
+    const matchSearch = `${doc.employee?.firstName || ""} ${doc.employee?.lastName || ""}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
 
@@ -61,8 +75,7 @@ const DocumentVerify = () => {
   });
 
   return (
-    <div className="container py-4">
-
+    <div className="container py-4 admin-document-verify-page">
       <div className="card shadow-sm">
 
         {/* Header */}
@@ -72,7 +85,7 @@ const DocumentVerify = () => {
             Employee Document Verification
           </h5>
 
-          {/* 🔥 FILTER + SEARCH */}
+          {/* FILTER + SEARCH */}
           <div className="d-flex flex-column flex-md-row gap-2 w-100 w-md-auto">
 
             <select
@@ -95,7 +108,6 @@ const DocumentVerify = () => {
             />
 
           </div>
-
         </div>
 
         <div className="card-body">
@@ -112,25 +124,31 @@ const DocumentVerify = () => {
                   <th>File</th>
                   <th>Upload Date</th>
                   <th>Status</th>
-                  <th style={{ width: "220px" }}>Actions</th>
+                  <th style={{ width: "240px" }}>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
 
-                {filteredDocs.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="text-center">Loading...</td>
+                  </tr>
+                ) : filteredDocs.length > 0 ? (
                   filteredDocs.map((doc) => (
-                    <tr key={doc.id}>
+                    <tr key={doc._id}>
 
                       <td className="fw-semibold">
-                        {doc.employeeName}
+                        {doc.employee?.firstName} {doc.employee?.lastName}
                       </td>
 
-                      <td>{doc.name}</td>
+                      <td>{doc.documentName}</td>
 
                       <td>{doc.fileName}</td>
 
-                      <td>{doc.uploadDate}</td>
+                      <td>
+                        {new Date(doc.createdAt).toLocaleDateString()}
+                      </td>
 
                       <td>
                         <span
@@ -146,25 +164,25 @@ const DocumentVerify = () => {
                         </span>
                       </td>
 
-                      <td className="d-flex">
+                      <td className="d-flex gap-2">
 
                         <button
                           className="btn btn-sm btn-info"
-                          onClick={() => handleDownload(doc.fileName)}
+                          onClick={() => handleDownload(doc.filePath)}
                         >
-                          Download
+                          View
                         </button>
 
                         <button
                           className="btn btn-sm btn-success"
-                          onClick={() => handleStatus(doc.id, "Verified")}
+                          onClick={() => handleStatus(doc._id, "Verified")}
                         >
                           Approve
                         </button>
 
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => handleStatus(doc.id, "Rejected")}
+                          onClick={() => handleStatus(doc._id, "Rejected")}
                         >
                           Reject
                         </button>
@@ -188,9 +206,7 @@ const DocumentVerify = () => {
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 };

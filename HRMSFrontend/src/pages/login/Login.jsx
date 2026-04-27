@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "../../assets/styles/Login.css";
 import logo from "../../assets/logoKashi.png";
 import { useNavigate, Navigate } from "react-router-dom";
-import API from "../../utils/axios"; // ✅ axios instance
+import { useAuth } from "../../context/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,10 +10,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { user, login } = useAuth(); // ✅ FIXED
 
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  // 🔥 FIX ROLE (Admin / Employee)
+  // ✅ Redirect if already logged in
   if (user?.role === "Admin") {
     return <Navigate to="/admin/dashboard" replace />;
   }
@@ -33,20 +32,11 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // 🔥 REAL API CALL
-      const res = await API.post("/auth/login", {
-        email,
-        password,
-      });
+      const res = await login(email, password); // ✅ login from context
 
-      // ✅ SAVE DATA
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      const role = res?.user?.role; // 👈 take from response
 
-      const loggedUser = res.data.user;
-
-      // 🔥 ROLE BASED REDIRECT
-      if (loggedUser.role === "Admin") {
+      if (role === "Admin") {
         navigate("/admin/dashboard", { replace: true });
       } else {
         navigate("/employee/dashboard", { replace: true });

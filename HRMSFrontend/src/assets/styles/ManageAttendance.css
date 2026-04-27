@@ -2,7 +2,8 @@
 .att-card {
   background: #fff;
   border-radius: 10px;
-  padding: 20px;
+  padding: clamp(12px, 2vw, 20px);
+  min-width: 0;
 }
 
 /* ===== HEADER ===== */
@@ -25,6 +26,7 @@
 
 .att-filter-bar select,
 .att-filter-bar input {
+  flex: 1 1 150px;
   padding: 6px 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -54,7 +56,7 @@
 /* ===== KPI ===== */
 .att-kpi-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 18px;
   margin-bottom: 20px;
 }
@@ -105,7 +107,7 @@
 /* ===== TABLE BASE ===== */
 .att-modern-table {
   width: 100%;
-  min-width: 900px;
+  min-width: 760px;
   border-collapse: collapse;
 }
 
@@ -251,6 +253,15 @@
 
 /* ===== MOBILE ===== */
 @media (max-width: 768px) {
+  .att-card {
+    padding: 12px;
+  }
+
+  .att-kpi-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
   .att-daywise-table {
     min-width: 900px;
   }

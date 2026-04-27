@@ -1,5 +1,5 @@
 /* ===== HEADER RESPONSIVE ===== */
-.card-header {
+.employee-salary-page .card-header {
   flex-wrap: wrap;
   gap: 10px;
 }
@@ -7,7 +7,7 @@
 /* ===== SUMMARY CARDS ===== */
 @media (max-width: 992px) {
 
-  .row.mb-4 > div {
+  .employee-salary-page .row.mb-4 > div {
     margin-bottom: 10px;
   }
 
@@ -17,44 +17,44 @@
 @media (max-width: 768px) {
 
   /* Header stack */
-  .card-header {
+  .employee-salary-page .card-header {
     flex-direction: column;
     align-items: flex-start !important;
   }
 
-  .card-header h4 {
+  .employee-salary-page .card-header h4 {
     font-size: 18px;
   }
 
   /* Employee info */
-  .card-body h5 {
+  .employee-salary-page .card-body h5 {
     font-size: 16px;
   }
 
   /* Summary cards full width */
-  .row.mb-4 {
+  .employee-salary-page .row.mb-4 {
     display: flex;
     flex-direction: column;
     gap: 10px;
   }
 
-  .row.mb-4 > div {
+  .employee-salary-page .row.mb-4 > div {
     width: 100%;
   }
 
   /* Table scroll */
-  .table-responsive {
+  .employee-salary-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .table {
+  .employee-salary-page .table {
     min-width: 700px; /* prevent break */
   }
 
   /* Compact table text */
-  .table th,
-  .table td {
+  .employee-salary-page .table th,
+  .employee-salary-page .table td {
     font-size: 13px;
     white-space: nowrap;
   }
@@ -64,16 +64,16 @@
 /* ===== SMALL MOBILE ===== */
 @media (max-width: 480px) {
 
-  .card {
+  .employee-salary-page .card {
     padding: 10px;
   }
 
-  .card-header h4 {
+  .employee-salary-page .card-header h4 {
     font-size: 16px;
   }
 
-  .table th,
-  .table td {
+  .employee-salary-page .table th,
+  .employee-salary-page .table td {
     font-size: 12px;
   }
 
@@ -85,18 +85,18 @@
 @media (max-width: 768px) {
 
   /* Ensure scroll */
-  .table-responsive {
+  .employee-salary-page .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  .table {
+  .employee-salary-page .table {
     min-width: 700px;
   }
 
   /* Sticky first column */
-  .table th:first-child,
-  .table td:first-child {
+  .employee-salary-page .table th:first-child,
+  .employee-salary-page .table td:first-child {
     position: sticky;
     left: 0;
     z-index: 2;
@@ -104,13 +104,13 @@
   }
 
   /* Header priority */
-  .table thead th:first-child {
+  .employee-salary-page .table thead th:first-child {
     z-index: 3;
   }
 
   /* Optional shadow for separation */
-  .table th:first-child,
-  .table td:first-child {
+  .employee-salary-page .table th:first-child,
+  .employee-salary-page .table td:first-child {
     box-shadow: 2px 0 5px rgba(0,0,0,0.05);
   }
 

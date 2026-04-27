@@ -13,7 +13,9 @@ const AdminDashboard = () => {
   const employees = data.employees || [];
   const attendance = data.attendance || [];
   const leaves = data.leaves || [];
-  const holidays = data.holidays || [];
+  const holidays = Array.isArray(data.holidays)
+  ? data.holidays
+  : data.holidays?.data || [];
 
   // ✅ CALCULATIONS
   const todayStr = new Date().toDateString();

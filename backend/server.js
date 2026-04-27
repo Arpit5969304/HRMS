@@ -15,6 +15,8 @@ import announcementRoutes from "./routes/announcementRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import documentRoutes from "./routes/documentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import employeeAccountRoutes from "./routes/employeeAccountRoutes.js";
+
 dotenv.config();
 
 // ✅ Connect Database
@@ -36,7 +38,7 @@ app.get("/", (req, res) => {
 // ✅ API Routes
 app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
-app.use("/api/leaves", leaveRoutes);
+app.use("/api/leave", leaveRoutes);
 app.use("/api/salary",salaryRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/remarks", remarkRoutes);
@@ -46,7 +48,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", authRoutes);
-
+app.use("/api/employee-account", employeeAccountRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });

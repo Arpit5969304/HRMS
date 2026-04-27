@@ -136,6 +136,11 @@ function Sidebar({ sidebarOpen }) {
             <BsGear className="nav-icon" />
             <span className="link-text">Document Verify</span>
           </NavLink>
+
+          <NavLink to="/admin/accountDetails" className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}>
+            <BsGear className="nav-icon" />
+            <span className="link-text">Account Details</span>
+          </NavLink>
         </>
       )}
     </div>

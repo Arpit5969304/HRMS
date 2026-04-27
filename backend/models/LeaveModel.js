@@ -35,6 +35,9 @@ const leaveSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 300,
+      required: function () {
+        return this.leaveType !== "Paid Leave";
+      },
     },
 
     status: {
@@ -47,6 +50,11 @@ const leaveSchema = new mongoose.Schema(
     totalDays: {
       type: Number,
       min: 0,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
 
     /* ==============================
@@ -68,32 +76,36 @@ const leaveSchema = new mongoose.Schema(
 );
 
 /* ==============================
-   🔥 INDEXES
+   🔥 INDEXES (OPTIMIZED)
 ============================== */
 leaveSchema.index({ employee: 1, fromDate: 1, toDate: 1 });
+leaveSchema.index({ employee: 1, status: 1 });
 
 /* ==============================
    🔥 VALIDATIONS
 ============================== */
-leaveSchema.pre("validate", function (next) {
-  // ❌ Invalid range
+leaveSchema.pre("validate", function () {
   if (this.fromDate > this.toDate) {
     return next(new Error("Invalid date range"));
   }
-
-  next();
 });
 
 /* ==============================
-   🔥 AUTO CALCULATE DAYS
+   🔥 AUTO CALCULATE DAYS (FIXED)
 ============================== */
-leaveSchema.pre("save", function (next) {
+leaveSchema.pre("save", function () {
   if (this.fromDate && this.toDate) {
-    const diff = this.toDate - this.fromDate;
+    const start = new Date(this.fromDate);
+    const end = new Date(this.toDate);
+
+    // ✅ normalize time (important fix)
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    const diff = end - start;
 
     let days = diff / (1000 * 60 * 60 * 24) + 1;
 
-    // ✅ Half day logic
     if (this.leaveType === "Half Unpaid Leave") {
       days = 0.5;
     }
@@ -101,11 +113,10 @@ leaveSchema.pre("save", function (next) {
     this.totalDays = +days.toFixed(1);
   }
 
-  next();
 });
 
 /* ==============================
-   🔥 STATIC → OVERLAP CHECK
+   🔥 STATIC → OVERLAP CHECK (FIXED)
 ============================== */
 leaveSchema.statics.checkOverlap = async function (
   employeeId,
@@ -115,12 +126,8 @@ leaveSchema.statics.checkOverlap = async function (
   const overlap = await this.findOne({
     employee: employeeId,
     status: { $ne: "Rejected" },
-    $or: [
-      {
-        fromDate: { $lte: toDate },
-        toDate: { $gte: fromDate },
-      },
-    ],
+    fromDate: { $lte: toDate },
+    toDate: { $gte: fromDate },
   });
 
   return !!overlap;

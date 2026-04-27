@@ -7,7 +7,6 @@ import {
   deleteTask,
 } from "../controllers/taskController.js";
 
-// 🔥 ADD THIS
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -23,15 +22,18 @@ router.post("/", protect, adminOnly, createTask);
 router.get("/", protect, adminOnly, getTasks);
 
 /* ==============================
-   ➤ GET OWN TASKS (Employee)
+   ➤ GET MY TASKS (Employee)
 ============================== */
-router.get("/me", protect, getEmployeeTasks);
+router.get("/my", protect, getEmployeeTasks);
+
+/* ==============================
+   ➤ GET SPECIFIC EMPLOYEE TASKS (Admin)
+============================== */
+router.get("/employee/:employeeId", protect, adminOnly, getEmployeeTasks);
 
 /* ==============================
    ➤ UPDATE TASK STATUS
 ============================== */
-// 👉 Employee can update own task
-// 👉 Admin can update any
 router.put("/:id/status", protect, updateTaskStatus);
 
 /* ==============================

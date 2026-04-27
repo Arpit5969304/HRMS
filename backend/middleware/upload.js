@@ -2,28 +2,46 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 
-// 🔥 Dynamic folder logic
+/* ==============================
+   🔥 CLEAN FILE NAME
+============================== */
+const cleanFileName = (name) => {
+  return name
+    .replace(/\s+/g, "_")
+    .replace(/[^\w.-]/g, "")
+    .toLowerCase();
+};
+
+/* ==============================
+   🔥 STORAGE CONFIG
+============================== */
 const storage = new CloudinaryStorage({
   cloudinary,
 
   params: async (req, file) => {
     let folder = "hrms_misc";
 
-    // ✅ Decide folder based on route
-    if (req.baseUrl.includes("profile")) {
+    // ✅ SAFE ROUTE CHECK
+    if (req.originalUrl.includes("/profile")) {
       folder = "hrms_profiles";
-    } else if (req.baseUrl.includes("documents")) {
+    } else if (req.originalUrl.includes("/documents")) {
       folder = "hrms_documents";
     }
 
+    const fileExt = file.mimetype.split("/")[1];
+
     return {
       folder,
-      allowed_formats: ["jpg", "png", "jpeg", "pdf"],
-      public_id: `${Date.now()}-${file.originalname}`,
+      resource_type: fileExt === "pdf" ? "raw" : "image", // 🔥 IMPORTANT
+      format: fileExt,
+      public_id: `${Date.now()}-${cleanFileName(file.originalname)}`,
     };
   },
 });
 
+/* ==============================
+   🔥 MULTER CONFIG
+============================== */
 const upload = multer({
   storage,
 
@@ -42,9 +60,28 @@ const upload = multer({
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPG, PNG, PDF allowed"), false);
+      cb(new Error("Only JPG, PNG, PDF files are allowed"), false);
     }
   },
 });
+
+/* ==============================
+   🔥 ERROR HANDLER (IMPORTANT)
+============================== */
+export const uploadMiddleware = (req, res, next) => {
+  upload.single("document")(req, res, (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({
+        message: "File too large (max 5MB)",
+      });
+    } else if (err) {
+      return res.status(400).json({
+        message: err.message,
+      });
+    }
+
+    next();
+  });
+};
 
 export default upload;

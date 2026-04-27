@@ -8,7 +8,6 @@ export const createAnnouncement = async (req, res) => {
   try {
     const { title, message, department, priority, expiryDate } = req.body;
 
-    // ✅ Validation
     if (!title?.trim() || !message?.trim() || !expiryDate) {
       return res.status(400).json({
         message: "Title, message and expiry date are required",
@@ -16,9 +15,12 @@ export const createAnnouncement = async (req, res) => {
     }
 
     const today = new Date();
-    const expDate = new Date(expiryDate);
+    today.setHours(0, 0, 0, 0);
 
-    if (expDate < today.setHours(0, 0, 0, 0)) {
+    const expDate = new Date(expiryDate);
+    expDate.setHours(0, 0, 0, 0);
+
+    if (expDate < today) {
       return res.status(400).json({
         message: "Expiry date cannot be in the past",
       });
@@ -32,7 +34,7 @@ export const createAnnouncement = async (req, res) => {
         ? priority
         : "Normal",
       expiryDate: expDate,
-      createdBy: req.user?._id, // ✅ track admin
+      createdBy: req.user._id,
     });
 
     res.status(201).json({
@@ -46,15 +48,26 @@ export const createAnnouncement = async (req, res) => {
 };
 
 /* ==============================
-   ➤ GET ALL (Public / Protected)
+   ➤ GET ALL (Employee/Admin)
 ============================== */
 export const getAnnouncements = async (req, res) => {
   try {
     const today = new Date();
 
-    const data = await Announcement.find({
-      expiryDate: { $gte: today }, // ✅ only active
-    })
+    const query = {
+      isActive: true,
+      expiryDate: { $gte: today },
+    };
+
+    // 🔥 department filtering
+    if (req.user?.department && req.user.role !== "Admin") {
+      query.$or = [
+        { department: "All" },
+        { department: req.user.department },
+      ];
+    }
+
+    const data = await Announcement.find(query)
       .sort({ createdAt: -1 });
 
     res.json(data);
@@ -76,45 +89,44 @@ export const updateAnnouncement = async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const updateData = {};
+    const announcement = await Announcement.findById(id);
 
-    if (title) updateData.title = title.trim();
-    if (message) updateData.message = message.trim();
-    if (department) updateData.department = department;
+    if (!announcement) {
+      return res.status(404).json({ message: "Announcement not found" });
+    }
+
+    if (title) announcement.title = title.trim();
+    if (message) announcement.message = message.trim();
+    if (department) announcement.department = department;
 
     if (priority) {
       if (!["Normal", "Medium", "High"].includes(priority)) {
         return res.status(400).json({ message: "Invalid priority" });
       }
-      updateData.priority = priority;
+      announcement.priority = priority;
     }
 
     if (expiryDate) {
       const expDate = new Date(expiryDate);
-      const today = new Date();
+      expDate.setHours(0, 0, 0, 0);
 
-      if (expDate < today.setHours(0, 0, 0, 0)) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (expDate < today) {
         return res.status(400).json({
           message: "Expiry date cannot be in the past",
         });
       }
 
-      updateData.expiryDate = expDate;
+      announcement.expiryDate = expDate;
     }
 
-    const updated = await Announcement.findByIdAndUpdate(
-      id,
-      updateData,
-      { new: true }
-    );
-
-    if (!updated) {
-      return res.status(404).json({ message: "Announcement not found" });
-    }
+    await announcement.save();
 
     res.json({
       message: "Updated successfully",
-      announcement: updated,
+      announcement,
     });
   } catch (error) {
     console.error("UPDATE ANNOUNCEMENT ERROR:", error);
@@ -123,7 +135,7 @@ export const updateAnnouncement = async (req, res) => {
 };
 
 /* ==============================
-   ➤ DELETE (Admin only)
+   ➤ DELETE (SOFT DELETE)
 ============================== */
 export const deleteAnnouncement = async (req, res) => {
   try {
@@ -133,11 +145,15 @@ export const deleteAnnouncement = async (req, res) => {
       return res.status(400).json({ message: "Invalid ID" });
     }
 
-    const deleted = await Announcement.findByIdAndDelete(id);
+    const announcement = await Announcement.findById(id);
 
-    if (!deleted) {
+    if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
     }
+
+    // 🔥 SOFT DELETE
+    announcement.isActive = false;
+    await announcement.save();
 
     res.json({ message: "Deleted successfully" });
   } catch (error) {

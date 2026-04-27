@@ -13,12 +13,13 @@ const useSalary = () => {
     try {
       setLoading(true);
 
-      await API.post("/salary/save", {
+      const res = await API.post("/salary/save", {
         employeeId,
         salary,
       });
 
       await getSalaryHistory(employeeId);
+      return res.data;
     } catch (err) {
       throw err;
     } finally {
@@ -33,7 +34,7 @@ const useSalary = () => {
     try {
       setLoading(true);
 
-      await API.post("/salary/increment", {
+      const res = await API.post("/salary/increment", {
         employeeId,
         amount,
         remarks,
@@ -41,6 +42,7 @@ const useSalary = () => {
 
       await getIncrementHistory(employeeId);
       await getSalaryHistory(employeeId);
+      return res.data;
     } catch (err) {
       throw err;
     } finally {
@@ -67,6 +69,20 @@ const useSalary = () => {
   /* ==============================
      🔥 GET INCREMENT HISTORY
   ============================== */
+  const getCurrentSalary = async (employeeId) => {
+    try {
+      setLoading(true);
+
+      const res = await API.get(`/salary/admin/current/${employeeId}`);
+      return res.data;
+    } catch (err) {
+      console.log(err);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getIncrementHistory = async (employeeId) => {
     try {
       setLoading(true);
@@ -89,6 +105,7 @@ const useSalary = () => {
     loading,
     saveSalary,
     applyIncrement,
+    getCurrentSalary,
     getSalaryHistory,
     getIncrementHistory,
   };

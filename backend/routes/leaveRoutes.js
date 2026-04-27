@@ -3,11 +3,11 @@ import {
   applyLeave,
   getAllLeaves,
   getEmployeeLeaves,
+  getMyLeaves, // 🔥 added
   updateLeaveStatus,
   deleteLeave,
 } from "../controllers/LeaveController.js";
 
-// 🔥 ADD THIS
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -18,9 +18,14 @@ const router = express.Router();
 router.post("/", protect, applyLeave);
 
 /* ==============================
-   ➤ GET OWN LEAVES (SAFE 🔐)
+   ➤ GET MY LEAVES (Employee)
 ============================== */
-router.get("/me", protect, getEmployeeLeaves);
+router.get("/my", protect, getMyLeaves);
+
+/* ==============================
+   ➤ GET SPECIFIC EMPLOYEE LEAVES
+============================== */
+router.get("/:employeeId", protect, getEmployeeLeaves);
 
 /* ==============================
    ➤ GET ALL LEAVES (Admin)
