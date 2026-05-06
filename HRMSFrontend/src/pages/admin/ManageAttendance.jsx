@@ -3,6 +3,44 @@ import "../../assets/styles/ManageAttendance.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import useDashboard from "../../hooks/useDashboard";
 
+const attendanceStatusConfig = {
+  present: {
+    shortLabel: "P",
+    fullLabel: "Present",
+    badgeClass: "success",
+  },
+  late: {
+    shortLabel: "L",
+    fullLabel: "Late",
+    badgeClass: "warning",
+  },
+  "half-day": {
+    shortLabel: "H",
+    fullLabel: "Half Day",
+    badgeClass: "info",
+  },
+  absent: {
+    shortLabel: "A",
+    fullLabel: "Absent",
+    badgeClass: "danger",
+  },
+  "no-record": {
+    shortLabel: "-",
+    fullLabel: "No Record",
+    badgeClass: "light",
+  },
+  sunday: {
+    shortLabel: "S",
+    fullLabel: "Sunday",
+    badgeClass: "dark",
+  },
+  future: {
+    shortLabel: "NA",
+    fullLabel: "Future",
+    badgeClass: "secondary",
+  },
+};
+
 const getEmployeeName = (emp) =>
   [emp?.firstName, emp?.lastName].filter(Boolean).join(" ") ||
   emp?.name ||
@@ -20,7 +58,11 @@ const formatDateKey = (date) => {
   const parsedDate = new Date(date);
   if (Number.isNaN(parsedDate.getTime())) return "";
 
-  return parsedDate.toISOString().slice(0, 10);
+  const year = parsedDate.getFullYear();
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 };
 
 const isInMonth = (date, yearMonth) => formatDateKey(date).startsWith(yearMonth);
@@ -55,10 +97,69 @@ const getLeaveDays = (leave) => {
   return Math.max(0, diff / (1000 * 60 * 60 * 24) + 1);
 };
 
-const getAttendanceMap = (attendance) => {
-  const map = new Map();
-  attendance?.forEach((date) => map.set(date, true));
-  return map;
+const getAttendanceStatusKey = (attendanceRecord) => {
+  const normalizedStatus = attendanceRecord?.status?.toLowerCase();
+
+  if (
+    normalizedStatus &&
+    Object.prototype.hasOwnProperty.call(attendanceStatusConfig, normalizedStatus)
+  ) {
+    return normalizedStatus;
+  }
+
+  return attendanceRecord ? "present" : "no-record";
+};
+
+const formatTime = (value) => {
+  if (!value) return "-";
+
+  const parsedDate = new Date(value);
+  if (Number.isNaN(parsedDate.getTime())) return "-";
+
+  return parsedDate.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const formatWorkingHours = (value) => {
+  const hours = Number(value);
+  return Number.isFinite(hours) ? hours.toFixed(2) : "-";
+};
+
+const isSunday = (date) => new Date(`${date}T00:00:00`).getDay() === 0;
+
+const getCalendarStatusKey = (date, attendanceRecord, currentDateKey) => {
+  if (date > currentDateKey) return "future";
+  if (attendanceRecord) return getAttendanceStatusKey(attendanceRecord);
+  if (isSunday(date)) return "sunday";
+
+  return "no-record";
+};
+
+const getDayCellTitle = (date, attendanceRecord, statusKey) => {
+  const lines = [
+    new Date(`${date}T00:00:00`).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    `Status: ${attendanceStatusConfig[statusKey].fullLabel}`,
+  ];
+
+  if (!attendanceRecord) {
+    return lines.join("\n");
+  }
+
+  lines.push(`Check In: ${formatTime(attendanceRecord.checkIn)}`);
+  lines.push(`Check Out: ${formatTime(attendanceRecord.checkOut)}`);
+  lines.push(`Hours: ${formatWorkingHours(attendanceRecord.workingHours)}`);
+
+  if (attendanceRecord.remark) {
+    lines.push(`Remark: ${attendanceRecord.remark}`);
+  }
+
+  return lines.join("\n");
 };
 
 const getDaysInMonth = (yearMonth) => {
@@ -77,7 +178,11 @@ const getDaysInMonth = (yearMonth) => {
 export default function ManageAttendance() {
   const { data, loading } = useDashboard();
   const [viewType, setViewType] = useState("summary");
-  const [monthYear, setMonthYear] = useState("2026-01");
+  const [monthYear, setMonthYear] = useState(() => {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    return `${today.getFullYear()}-${month}`;
+  });
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -141,9 +246,14 @@ export default function ManageAttendance() {
         const monthLeaves = employeeLeaves.filter((leave) =>
           isLeaveInMonth(leave, monthYear),
         );
-        const attendanceDateSet = new Set(
-          monthAttendance.map((att) => formatDateKey(att.date)),
-        );
+        const attendanceByDate = new Map();
+
+        monthAttendance.forEach((att) => {
+          const dateKey = formatDateKey(att.date);
+          if (!dateKey) return;
+          attendanceByDate.set(dateKey, att);
+        });
+
         const pastMonthDates = monthDates.filter(
           (date) => date <= currentDateKey,
         );
@@ -167,8 +277,11 @@ export default function ManageAttendance() {
             monthAttendance.filter((att) => att.status === "half-day").length,
           openRequest: monthLeaves.filter((leave) => leave.status === "Pending")
             .length,
-          noData: pastMonthDates.filter((date) => !attendanceDateSet.has(date))
-            .length,
+          noData: pastMonthDates.filter(
+            (date) =>
+              getCalendarStatusKey(date, attendanceByDate.get(date), currentDateKey) ===
+              "no-record",
+          ).length,
         };
       }),
     [
@@ -187,20 +300,46 @@ export default function ManageAttendance() {
         const monthAttendance = (attendanceByEmployee.get(emp.id) || []).filter(
           (att) => isInMonth(att.date, monthYear),
         );
-        const attendance = monthAttendance
-          .filter((att) => att.status !== "absent")
-          .map((att) => formatDateKey(att.date))
-          .filter(Boolean);
+        const attendanceByDate = new Map();
+
+        monthAttendance.forEach((att) => {
+          const dateKey = formatDateKey(att.date);
+          if (!dateKey) return;
+          attendanceByDate.set(dateKey, att);
+        });
+
+        const totals = {
+          present: 0,
+          late: 0,
+          halfDay: 0,
+          absent: 0,
+          noRecord: 0,
+        };
+
+        monthDates.forEach((date) => {
+          const statusKey = getCalendarStatusKey(
+            date,
+            attendanceByDate.get(date),
+            currentDateKey,
+          );
+
+          if (statusKey === "present") totals.present += 1;
+          else if (statusKey === "late") totals.late += 1;
+          else if (statusKey === "half-day") totals.halfDay += 1;
+          else if (statusKey === "absent") totals.absent += 1;
+          else if (statusKey === "no-record") totals.noRecord += 1;
+        });
 
         return {
           id: emp.id,
           displayId: emp.displayId,
           name: emp.name,
           department: emp.department,
-          attendance,
+          attendanceByDate,
+          totals,
         };
       }),
-    [attendanceByEmployee, employees, monthYear],
+    [attendanceByEmployee, currentDateKey, employees, monthDates, monthYear],
   );
 
   const openingBalanceData = useMemo(
@@ -438,6 +577,17 @@ export default function ManageAttendance() {
         {/* DAYWISE */}
         {viewType === "daywise" && filteredData.length > 0 && (
           <div className="att-table-wrapper">
+            <div className="att-view-legend">
+              {Object.entries(attendanceStatusConfig).map(([key, config]) => (
+                <span key={key} className="att-legend-item">
+                  <span className={`badge ${config.badgeClass}`}>
+                    {config.shortLabel}
+                  </span>
+                  {config.fullLabel}
+                </span>
+              ))}
+            </div>
+
             <div className="att-table-scroll responsive-daywise">
               <table className="att-modern-table att-daywise-table text-nowrap">
                 <thead className="att-sticky-header">
@@ -448,17 +598,16 @@ export default function ManageAttendance() {
                       <th key={i}>{new Date(date).getDate()}</th>
                     ))}
 
-                    <th>Total P</th>
-                    <th>Total A</th>
+                    <th>P</th>
+                    <th>L</th>
+                    <th>H</th>
+                    <th>A</th>
+                    <th>No Record</th>
                   </tr>
                 </thead>
 
                 <tbody>
                   {filteredData.map((emp) => {
-                    let totalP = 0;
-                    let totalA = 0;
-                    const map = getAttendanceMap(emp.attendance);
-
                     return (
                       <tr key={emp.id}>
                         <td className="att-sticky-col att-emp-name">
@@ -466,29 +615,35 @@ export default function ManageAttendance() {
                         </td>
 
                         {monthDates.map((date, i) => {
-                          let status =
-                            new Date(date) > new Date()
-                              ? "NA"
-                              : map.has(date)
-                                ? "P"
-                                : "A";
-
-                          if (status === "P") totalP++;
-                          if (status === "A") totalA++;
+                          const attendanceRecord = emp.attendanceByDate.get(date);
+                          const statusKey = getCalendarStatusKey(
+                            date,
+                            attendanceRecord,
+                            currentDateKey,
+                          );
+                          const statusConfig = attendanceStatusConfig[statusKey];
 
                           return (
                             <td key={i}>
                               <span
-                                className={`badge ${status === "P" ? "success" : status === "A" ? "danger" : "secondary"}`}
+                                className={`badge ${statusConfig.badgeClass}`}
+                                title={getDayCellTitle(
+                                  date,
+                                  attendanceRecord,
+                                  statusKey,
+                                )}
                               >
-                                {status}
+                                {statusConfig.shortLabel}
                               </span>
                             </td>
                           );
                         })}
 
-                        <td>{totalP}</td>
-                        <td>{totalA}</td>
+                        <td>{emp.totals.present}</td>
+                        <td>{emp.totals.late}</td>
+                        <td>{emp.totals.halfDay}</td>
+                        <td>{emp.totals.absent}</td>
+                        <td>{emp.totals.noRecord}</td>
                       </tr>
                     );
                   })}

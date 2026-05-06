@@ -1,22 +1,29 @@
-import "../assets/styles/topbar.css";
-import { BsSearch, BsBell, BsList, BsChevronDown } from "react-icons/bs";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState, useRef, useEffect } from "react";
-import { useAuth } from "../context/AuthContext"; // 🔥 ADD THIS
+import { BsBell, BsChevronDown, BsList, BsSearch } from "react-icons/bs";
+import { useAuth } from "../context/AuthContext";
+import "../assets/styles/topbar.css";
 
 function Topbar({ toggleSidebar }) {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
-  const { user, logout } = useAuth(); // 🔥 USE CONTEXT
+  const { user, logout } = useAuth();
+
+  const profileRoute =
+    user?.role === "Admin" ? "/admin/profileUpdate" : "/employee/profile";
+  const dashboardRoute =
+    user?.role === "Admin" ? "/admin/dashboard" : "/employee/dashboard";
+  const displayName =
+    user?.firstName || user?.fullName || user?.name || "Guest";
+  const avatarSrc = user?.profileImage || "https://i.pravatar.cc/150?img=3";
 
   const handleLogout = () => {
-    logout(); // 🔥 context logout
+    logout();
     navigate("/login", { replace: true });
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -38,7 +45,6 @@ function Topbar({ toggleSidebar }) {
         <BsList />
       </div>
 
-      {/* Left */}
       <div className="topbar-left">
         <div className="search-box search-icon-mobile d-md-none">
           <input type="text" placeholder="Search..." />
@@ -46,48 +52,36 @@ function Topbar({ toggleSidebar }) {
         </div>
       </div>
 
-      {/* Right */}
       <div className="topbar-right">
         <div className="notification">
           <BsBell />
           <span className="badge">3</span>
         </div>
 
-        {/* User */}
         <div
           className="user-info"
           ref={dropdownRef}
-          onClick={() => setShowDropdown(!showDropdown)}
+          onClick={() => setShowDropdown((current) => !current)}
         >
           <div className="user-text">
-            <span className="user-name">
-              {user?.firstName || "Guest"} {/* 🔥 SAFE */}
-            </span>
-            <small className="user-role">
-              {user?.role || "Employee"}
-            </small>
+            <span className="user-name">{displayName}</span>
+            <small className="user-role">{user?.role || "Employee"}</small>
           </div>
 
-          <img
-            src="https://i.pravatar.cc/150?img=3"
-            alt="user"
-            className="user-avatar"
-          />
+          <img src={avatarSrc} alt="user" className="user-avatar" />
 
           <BsChevronDown className="dropdown-icon" />
 
           {showDropdown && (
             <div className="user-dropdown-card">
-              <button onClick={() => navigate("/profile")}>
-                My Profile
-              </button>
+              <button onClick={() => navigate(profileRoute)}>My Profile</button>
 
               <button onClick={handleLogout} className="logout-btn">
                 Logout
               </button>
 
-              <button onClick={() => navigate("/profileUpdate")}>
-                ProfileUpdate
+              <button onClick={() => navigate(dashboardRoute)}>
+                Dashboard
               </button>
             </div>
           )}

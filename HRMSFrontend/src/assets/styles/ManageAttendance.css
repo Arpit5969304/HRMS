@@ -158,6 +158,41 @@
   color: #fff;
 }
 
+.badge.warning {
+  background: #d97706;
+  color: #fff;
+}
+
+.badge.info {
+  background: #0284c7;
+  color: #fff;
+}
+
+.badge.light {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.badge.dark {
+  background: #374151;
+  color: #fff;
+}
+
+.att-view-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.att-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #4b5563;
+}
+
 /* ===== DAYWISE TABLE ===== */
 .att-daywise-table {
   width: max-content; /* ✅ container ke andar rahe */
@@ -204,12 +239,18 @@
 }
 
 /* ===== DATE CELLS ===== */
-.att-daywise-table th:not(:first-child):not(:nth-last-child(-n + 2)),
-.att-daywise-table td:not(:first-child):not(:nth-last-child(-n + 2)) {
+.att-daywise-table th:not(:first-child):not(:nth-last-child(-n + 5)),
+.att-daywise-table td:not(:first-child):not(:nth-last-child(-n + 5)) {
   width: 32px;
 }
 
 /* ===== TOTAL COLUMNS ===== */
+.att-daywise-table th:nth-last-child(5),
+.att-daywise-table td:nth-last-child(5),
+.att-daywise-table th:nth-last-child(4),
+.att-daywise-table td:nth-last-child(4),
+.att-daywise-table th:nth-last-child(3),
+.att-daywise-table td:nth-last-child(3),
 .att-daywise-table th:nth-last-child(2),
 .att-daywise-table td:nth-last-child(2),
 .att-daywise-table th:last-child,

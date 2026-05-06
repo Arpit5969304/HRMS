@@ -5,43 +5,30 @@ import {
   getCurrentSalary,
   getSalaryHistory,
   getIncrementHistory,
-  getMySalary, // 🔥 ADD THIS
+  getMySalary,
+  previewPayroll,
+  payMonthlySalary,
+  getPayrollHistory,
+  previewMyPayroll,
 } from "../controllers/salaryController.js";
-
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/* ==============================
-   ➤ SAVE SALARY (Admin only)
-============================== */
 router.post("/save", protect, adminOnly, saveSalary);
-
-/* ==============================
-   ➤ APPLY INCREMENT (Admin only)
-============================== */
 router.post("/increment", protect, adminOnly, applyIncrement);
 
-/* ==============================
-   ➤ GET CURRENT SALARY (Admin)
-============================== */
 router.get("/admin/current/:employeeId", protect, adminOnly, getCurrentSalary);
-
-/* ==============================
-   ➤ GET MY SALARY (Employee) 🔥
-============================== */
-router.get("/my", protect, getMySalary);
-
-/* ==============================
-   ➤ GET SALARY HISTORY
-============================== */
+router.get("/admin/payroll/:employeeId/preview", protect, adminOnly, previewPayroll);
+router.get("/admin/payroll/:employeeId", protect, adminOnly, getPayrollHistory);
+router.post("/admin/payroll/pay", protect, adminOnly, payMonthlySalary);
 router.get("/admin/:employeeId", protect, adminOnly, getSalaryHistory);
-router.get("/me/history", protect, getSalaryHistory);
-
-/* ==============================
-   ➤ GET INCREMENT HISTORY
-============================== */
 router.get("/admin/increment/:employeeId", protect, adminOnly, getIncrementHistory);
+
+router.get("/my", protect, getMySalary);
+router.get("/me/history", protect, getSalaryHistory);
 router.get("/me/increment", protect, getIncrementHistory);
+router.get("/me/payroll/preview", protect, previewMyPayroll);
+router.get("/me/payroll", protect, getPayrollHistory);
 
 export default router;

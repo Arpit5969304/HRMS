@@ -7,6 +7,7 @@ import {
   getEmployeeById,
   deleteEmployee,
   updateEmployee,
+  updateMyProfile,
 } from "../controllers/employeeController.js";
 
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
@@ -23,6 +24,9 @@ router.get("/", protect, getEmployees);
 router.get("/me", protect, (req, res) => {
   res.json(req.user);
 });
+
+// ✅ UPDATE OWN PROFILE
+router.put("/me", protect, upload.single("profileImage"), updateMyProfile);
 
 // ➤ GET SINGLE EMPLOYEE
 router.get("/:id", protect, getEmployeeById);

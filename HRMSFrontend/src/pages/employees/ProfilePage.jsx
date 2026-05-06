@@ -9,7 +9,7 @@ import {
 import { CgProfile } from "react-icons/cg";
 import "../../assets/styles/ProfilePage.css";
 
-const Profile = () => {
+const ProfilePage = () => {
 
   const [openModal, setOpenModal] = useState(false);
   const [user, setUser] = useState(null);
@@ -194,4 +194,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default ProfilePage;

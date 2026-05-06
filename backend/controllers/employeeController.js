@@ -162,6 +162,101 @@ export const getEmployeeById = async (req, res) => {
 };
 
 /* ==============================
+   ➤ UPDATE OWN PROFILE
+============================== */
+export const updateMyProfile = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+    const data = req.body;
+    const updateData = {};
+
+    if (data.firstName !== undefined) {
+      const firstName = data.firstName.trim();
+
+      if (!firstName) {
+        return res.status(400).json({ message: "First name is required" });
+      }
+
+      updateData.firstName = firstName;
+    }
+
+    if (data.lastName !== undefined) {
+      const lastName = data.lastName.trim();
+
+      if (!lastName) {
+        return res.status(400).json({ message: "Last name is required" });
+      }
+
+      updateData.lastName = lastName;
+    }
+
+    if (data.phone !== undefined) {
+      const phone = data.phone.trim();
+
+      if (phone && !/^[0-9]{10}$/.test(phone)) {
+        return res.status(400).json({ message: "Phone must be 10 digits" });
+      }
+
+      updateData.phone = phone;
+    }
+
+    if (data.email !== undefined) {
+      const email = data.email.toLowerCase().trim();
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      if (!/\S+@\S+\.\S+/.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      const exists = await Employee.findOne({
+        email,
+        _id: { $ne: employeeId },
+      });
+
+      if (exists) {
+        return res.status(400).json({ message: "Email already exists" });
+      }
+
+      updateData.email = email;
+    }
+
+    if (data.password) {
+      if (data.password.length < 6) {
+        return res.status(400).json({
+          message: "Password must be at least 6 characters",
+        });
+      }
+
+      updateData.password = await bcrypt.hash(data.password, 10);
+    }
+
+    if (req.file) {
+      updateData.profileImage = req.file.path;
+    }
+
+    const updated = await Employee.findByIdAndUpdate(employeeId, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
+    if (!updated) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      user: updated,
+    });
+  } catch (error) {
+    console.error("UPDATE MY PROFILE ERROR:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
+/* ==============================
    ➤ UPDATE EMPLOYEE
 ============================== */
 export const updateEmployee = async (req, res) => {
@@ -206,7 +301,7 @@ export const updateEmployee = async (req, res) => {
 
     /* ========= IMAGE UPDATE ========= */
     if (req.file) {
-      updateData.profileImage = req.file.filename;
+      updateData.profileImage = req.file.path;
     }
 
     /* ========= EMAIL ========= */

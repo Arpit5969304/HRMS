@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "../../assets/styles/ManageSalary.css";
 import useEmployees from "../../hooks/useEmployees";
 import useSalary from "../../hooks/useSalary";
@@ -39,6 +39,17 @@ const monthNames = [
   "December",
 ];
 
+const getCurrentPeriodValue = () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  return `${now.getFullYear()}-${month}`;
+};
+
+const parsePeriodValue = (value) => {
+  const [year, month] = value.split("-").map(Number);
+  return { month, year };
+};
+
 const formatMoney = (amount) =>
   `Rs. ${Number(amount || 0).toLocaleString("en-IN", {
     maximumFractionDigits: 2,
@@ -54,14 +65,22 @@ const formatDate = (date) => {
   });
 };
 
+const formatMonthYear = (month, year) =>
+  `${monthNames[month] || month} ${year}`;
+
+const getEmployeeName = (employee) =>
+  [employee?.firstName, employee?.lastName].filter(Boolean).join(" ") ||
+  employee?.employeeId ||
+  "Employee";
+
 const getHistoryTotal = (record) => {
-  if (record.totalSalary !== undefined && record.totalSalary !== null) {
-    return record.totalSalary;
+  if (record?.totalSalary !== undefined && record?.totalSalary !== null) {
+    return Number(record.totalSalary);
   }
 
   return salaryFields.reduce(
-    (total, field) => total + Number(record.salary?.[field] || 0),
-    0
+    (total, field) => total + Number(record?.salary?.[field] || 0),
+    0,
   );
 };
 
@@ -106,128 +125,159 @@ const getNewBasic = (increment) => {
   return null;
 };
 
+const getPayrollStatusClass = (status) =>
+  status === "Paid" ? "is-paid" : "is-pending";
+
 const ManageSalary = () => {
   const { employees } = useEmployees();
-
   const {
     salaryHistory,
     incrementHistory,
+    payrollHistory,
+    loading,
     saveSalary,
     applyIncrement,
     getCurrentSalary,
     getSalaryHistory,
     getIncrementHistory,
+    getPayrollPreview,
+    getAdminPayrollHistory,
+    payMonthlySalary,
   } = useSalary();
 
   const [salary, setSalary] = useState(emptySalary);
-
   const [searchEmployee, setSearchEmployee] = useState("");
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [activeTab, setActiveTab] = useState("salary");
   const [selectedDepartment, setSelectedDepartment] = useState("");
-
-  const departments = [
-    ...new Set(employees.map((emp) => emp.department).filter(Boolean)),
-  ];
-
+  const [errors, setErrors] = useState({});
+  const [activeTab, setActiveTab] = useState("structure");
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [incrementAmount, setIncrementAmount] = useState("");
   const [remarks, setRemarks] = useState("");
+  const [payrollPeriod, setPayrollPeriod] = useState(getCurrentPeriodValue);
+  const [payrollNotes, setPayrollNotes] = useState("");
+  const [payrollPreview, setPayrollPreview] = useState(null);
 
-  const totalIncrementAmount = incrementHistory.reduce(
-    (total, increment) => total + Number(increment.amount || 0),
-    0
+  const departments = useMemo(
+    () => [...new Set(employees.map((emp) => emp.department).filter(Boolean))],
+    [employees],
+  );
+
+  const employeeSuggestions = useMemo(() => {
+    const search = searchEmployee.trim().toLowerCase();
+
+    return employees
+      .filter((emp) => {
+        const matchesDepartment =
+          selectedDepartment === "" || emp.department === selectedDepartment;
+
+        if (!matchesDepartment) return false;
+        if (!search) return true;
+
+        return (
+          getEmployeeName(emp).toLowerCase().includes(search) ||
+          emp.employeeId?.toLowerCase().includes(search) ||
+          emp.department?.toLowerCase().includes(search) ||
+          emp.designation?.toLowerCase().includes(search)
+        );
+      })
+      .slice(0, 8);
+  }, [employees, searchEmployee, selectedDepartment]);
+
+  const totalIncrementAmount = useMemo(
+    () =>
+      incrementHistory.reduce(
+        (total, increment) => total + Number(increment.amount || 0),
+        0,
+      ),
+    [incrementHistory],
   );
 
   const latestIncrementDate = incrementHistory[0]?.createdAt;
 
-  const netSalary =
-    Number(salary.basic || 0) +
-    Number(salary.hra || 0) +
-    Number(salary.conveyance || 0) +
-    Number(salary.medical || 0) +
-    Number(salary.lta || 0) +
-    Number(salary.special || 0);
+  const netSalary = useMemo(
+    () =>
+      salaryFields.reduce(
+        (total, field) => total + Number(salary[field] || 0),
+        0,
+      ),
+    [salary],
+  );
 
-  const handleChange = (field, value) => {
-    setSalary({ ...salary, [field]: value });
+  const annualSalary = netSalary * 12;
+  const latestPaidPayroll = payrollHistory[0] || null;
+  const payrollRate = payrollPreview?.workingDays
+    ? Math.round(
+        (Number(payrollPreview.payableDays || 0) / payrollPreview.workingDays) *
+          100,
+      )
+    : 0;
+  const selectedPeriod = parsePeriodValue(payrollPeriod);
+
+  const loadPayrollPreview = async (
+    employeeId = selectedEmployee?._id,
+    period = payrollPeriod,
+  ) => {
+    if (!employeeId) return;
+
+    const { month, year } = parsePeriodValue(period);
+    const preview = await getPayrollPreview(employeeId, month, year);
+    setPayrollPreview(preview);
   };
 
-  /* ==============================
-     🔥 SEARCH
-  ============================== */
-  const handleEmployeeSearch = (value) => {
-    setSearchEmployee(value);
+  const handlePayrollPeriodChange = async (value) => {
+    setPayrollPeriod(value);
 
-    const search = value.toLowerCase();
+    if (!selectedEmployee?._id) return;
 
-    const results = employees.filter((emp) => {
-      const fullName = `${emp.firstName} ${emp.lastName}`.toLowerCase();
-
-      const matchesDepartment =
-        !selectedDepartment || emp.department === selectedDepartment;
-
-      const matchesSearch =
-        fullName.includes(search) ||
-        emp.department?.toLowerCase().includes(search) ||
-        emp.employeeId?.toLowerCase().includes(search);
-
-      return matchesDepartment && matchesSearch;
-    });
-
-    setFilteredEmployees(results);
+    await loadPayrollPreview(selectedEmployee._id, value);
   };
 
-  /* ==============================
-     🔥 SELECT EMPLOYEE
-  ============================== */
-  const selectEmployee = async (emp) => {
-    setSearchEmployee(`${emp.firstName} ${emp.lastName}`);
-    setSelectedEmployee(emp);
-    setFilteredEmployees([]);
+  const selectEmployee = async (employee) => {
+    setSelectedEmployee(employee);
+    setSearchEmployee(getEmployeeName(employee));
+    setShowSuggestions(false);
     setErrors({});
+    setPayrollNotes("");
 
-    const currentSalary = await getCurrentSalary(emp._id);
+    const { month, year } = parsePeriodValue(payrollPeriod);
 
-    if (currentSalary) {
-      setSalary({
-        basic: currentSalary.basic ?? "",
-        hra: currentSalary.hra ?? "",
-        conveyance: currentSalary.conveyance ?? "",
-        medical: currentSalary.medical ?? "",
-        lta: currentSalary.lta ?? "",
-        special: currentSalary.special ?? "",
-      });
-    } else {
-      setSalary(emptySalary);
-    }
+    const [currentSalary, , , , preview] = await Promise.all([
+      getCurrentSalary(employee._id),
+      getSalaryHistory(employee._id),
+      getIncrementHistory(employee._id),
+      getAdminPayrollHistory(employee._id),
+      getPayrollPreview(employee._id, month, year),
+    ]);
 
-    // 🔥 fetch history from backend
-    await getSalaryHistory(emp._id);
-    await getIncrementHistory(emp._id);
+    setSalary(
+      currentSalary
+        ? {
+            basic: currentSalary.basic ?? "",
+            hra: currentSalary.hra ?? "",
+            conveyance: currentSalary.conveyance ?? "",
+            medical: currentSalary.medical ?? "",
+            lta: currentSalary.lta ?? "",
+            special: currentSalary.special ?? "",
+          }
+        : emptySalary,
+    );
+    setPayrollPreview(preview);
   };
 
-  /* ==============================
-     🔥 VALIDATION
-  ============================== */
   const validateSalary = () => {
-    let newErrors = {};
+    const nextErrors = {};
 
-    Object.keys(salary).forEach((key) => {
-      if (salary[key] === "" || Number(salary[key]) < 0) {
-        newErrors[key] = "Invalid amount";
+    salaryFields.forEach((field) => {
+      if (salary[field] === "" || Number(salary[field]) < 0) {
+        nextErrors[field] = "Invalid amount";
       }
     });
 
-    setErrors(newErrors);
-
-    return Object.keys(newErrors).length === 0;
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
-  /* ==============================
-     🔥 SAVE SALARY (API)
-  ============================== */
   const handleSaveSalary = async () => {
     if (!selectedEmployee) {
       alert("Please select employee");
@@ -239,14 +289,12 @@ const ManageSalary = () => {
     try {
       const result = await saveSalary(selectedEmployee._id, salary);
       alert(result?.message || "Salary saved successfully");
+      await loadPayrollPreview(selectedEmployee._id, payrollPeriod);
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      alert(err.response?.data?.message || "Unable to save salary");
     }
   };
 
-  /* ==============================
-     🔥 INCREMENT (API)
-  ============================== */
   const handleIncrement = async () => {
     if (!selectedEmployee) {
       alert("Select employee first");
@@ -262,7 +310,7 @@ const ManageSalary = () => {
       const result = await applyIncrement(
         selectedEmployee._id,
         incrementAmount,
-        remarks
+        remarks,
       );
 
       if (result?.salary) {
@@ -278,287 +326,559 @@ const ManageSalary = () => {
 
       setIncrementAmount("");
       setRemarks("");
-
-      alert("✅ Increment applied");
+      await loadPayrollPreview(selectedEmployee._id, payrollPeriod);
+      alert("Increment applied successfully");
     } catch (err) {
-      alert(err.response?.data?.message || "Error");
+      alert(err.response?.data?.message || "Unable to apply increment");
+    }
+  };
+
+  const handlePaySalary = async () => {
+    if (!selectedEmployee) {
+      alert("Select employee first");
+      return;
+    }
+
+    const { month, year } = parsePeriodValue(payrollPeriod);
+
+    try {
+      const result = await payMonthlySalary(
+        selectedEmployee._id,
+        month,
+        year,
+        payrollNotes,
+      );
+
+      setPayrollPreview(result?.payroll || null);
+      setPayrollNotes("");
+      await getAdminPayrollHistory(selectedEmployee._id);
+      alert(result?.message || "Salary paid successfully");
+    } catch (err) {
+      alert(err.response?.data?.message || "Unable to pay salary");
     }
   };
 
   return (
-    <>
-      <div className="container-fluid ">
-        <div className="card shadow-sm border-0">
-          <div className="card-body">
-            <h4 className=" fw-bold text-primary">
-              Manage Employee Salary
-            </h4>
+    <div className="salary-admin-page">
+      <div className="salary-admin-shell">
+        <div className="salary-admin-header">
+          <div>
+            <h3>Salary & Payroll Management</h3>
+            <p>
+              Manage salary structure, increments, and monthly payroll from
+              real attendance.
+            </p>
+          </div>
+          <div className="salary-period-chip">
+            Payroll Period:{" "}
+            {formatMonthYear(selectedPeriod.month, selectedPeriod.year)}
+          </div>
+        </div>
 
-            {/* Employee Search + Net Salary */}
-            <div className="row g-3 mb-3">
-              {/* Department */}
-              <div className="col-12 col-sm-6 col-lg-4">
-                <label className="form-label fw-semibold">Department</label>
+        <div className="salary-toolbar">
+          <div className="salary-toolbar-field">
+            <label>Department</label>
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {departments.map((department) => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+          </div>
 
-                <select
-                  className="form-select"
-                  value={selectedDepartment}
-                  onChange={(e) => setSelectedDepartment(e.target.value)}
-                >
-                  <option value="">All Departments</option>
+          <div className="salary-toolbar-field is-search">
+            <label>Select Employee</label>
+            <div className="salary-search-wrap">
+              <input
+                type="text"
+                value={searchEmployee}
+                placeholder="Search by name, employee ID, or department"
+                onChange={(e) => {
+                  setSearchEmployee(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+              />
 
-                  {departments.map((dept, index) => (
-                    <option key={index} value={dept}>
-                      {dept}
-                    </option>
+              {showSuggestions && employeeSuggestions.length > 0 && (
+                <div className="salary-suggestion-list">
+                  {employeeSuggestions.map((employee) => (
+                    <button
+                      key={employee._id}
+                      type="button"
+                      className="salary-suggestion-item"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        selectEmployee(employee);
+                      }}
+                    >
+                      <strong>{getEmployeeName(employee)}</strong>
+                      <span>
+                        {employee.employeeId || "-"} - {employee.department || "-"}
+                      </span>
+                    </button>
                   ))}
-                </select>
-              </div>
-
-              {/* Search */}
-              <div className="col-12 col-sm-6 col-lg-4">
-                <label className="form-label fw-semibold">
-                  Select Employee
-                </label>
-
-                <div className="position-relative">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search employee..."
-                    value={searchEmployee}
-                    onChange={(e) =>
-                      handleEmployeeSearch(e.target.value)
-                    }
-                  />
-
-                  {filteredEmployees.length > 0 && (
-                    <ul className="list-group position-absolute w-100 shadow">
-                      {filteredEmployees.map((emp) => (
-                        <li
-                          key={emp._id}
-                          className="list-group-item list-group-item-action"
-                          onClick={() => selectEmployee(emp)}
-                        >
-                          <div className="d-flex justify-content-between">
-                            <span>
-                              {emp.firstName} {emp.lastName}
-                            </span>
-                            <small className="text-muted">
-                              {emp.department}
-                            </small>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
                 </div>
+              )}
+            </div>
+          </div>
+
+          <div className="salary-toolbar-field">
+            <label>Payroll Month</label>
+            <input
+              type="month"
+              value={payrollPeriod}
+              onChange={(e) => handlePayrollPeriodChange(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {selectedEmployee ? (
+          <>
+            <div className="salary-employee-hero">
+              <div>
+                <span className="hero-kicker">
+                  {selectedEmployee.employeeId || "Employee"}
+                </span>
+                <h4>{getEmployeeName(selectedEmployee)}</h4>
+                <p>
+                  {selectedEmployee.designation || "Employee"} -{" "}
+                  {selectedEmployee.department || "-"}
+                </p>
               </div>
 
-              {/* Net Salary */}
-              <div className="col-12 col-sm-6 col-lg-4">
-                <label className="form-label fw-semibold">
-                  Monthly Salary
-                </label>
-
-                <input
-                  type="text"
-                  className="form-control fw-bold bg-light"
-                  value={netSalary.toFixed(2)}
-                  readOnly
-                />
+              <div className="hero-meta-grid">
+                <div>
+                  <span>Current Monthly CTC</span>
+                  <strong>{formatMoney(netSalary)}</strong>
+                </div>
+                <div>
+                  <span>Annual CTC</span>
+                  <strong>{formatMoney(annualSalary)}</strong>
+                </div>
+                <div>
+                  <span>Latest Paid Month</span>
+                  <strong>
+                    {latestPaidPayroll
+                      ? formatMonthYear(
+                          latestPaidPayroll.month,
+                          latestPaidPayroll.year,
+                        )
+                      : "-"}
+                  </strong>
+                </div>
+                <div>
+                  <span>Total Increment</span>
+                  <strong>{formatMoney(totalIncrementAmount)}</strong>
+                </div>
               </div>
             </div>
 
-            {/* Tabs */}
-            <ul className="nav nav-tabs mb-4">
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === "salary" ? "active" : ""}`}
-                  onClick={() => setActiveTab("salary")}
-                >
-                  Salary Structure
-                </button>
-              </li>
+            <div className="salary-tabs">
+              <button
+                type="button"
+                className={activeTab === "structure" ? "active" : ""}
+                onClick={() => setActiveTab("structure")}
+              >
+                Salary Structure
+              </button>
+              <button
+                type="button"
+                className={activeTab === "payroll" ? "active" : ""}
+                onClick={() => setActiveTab("payroll")}
+              >
+                Monthly Payroll
+              </button>
+              <button
+                type="button"
+                className={activeTab === "history" ? "active" : ""}
+                onClick={() => setActiveTab("history")}
+              >
+                Salary History
+              </button>
+              <button
+                type="button"
+                className={activeTab === "increment" ? "active" : ""}
+                onClick={() => setActiveTab("increment")}
+              >
+                Increment History
+              </button>
+            </div>
 
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === "history" ? "active" : ""}`}
-                  onClick={() => setActiveTab("history")}
-                >
-                  Salary History
-                </button>
-              </li>
-
-              <li className="nav-item">
-                <button
-                  className={`nav-link ${activeTab === "increment" ? "active" : ""}`}
-                  onClick={() => setActiveTab("increment")}
-                >
-                  Increment History
-                </button>
-              </li>
-            </ul>
-
-            {/* Salary */}
-            {activeTab === "salary" && (
-              <>
-                <div className="row g-3">
-                  {Object.keys(salary).map((key) => (
-                    <div className="col-12 col-sm-6 col-lg-4" key={key}>
-                      <div className="input-group-m">
-                        <span className="input-addon text-capitalize">
-                          {key}
-                        </span>
-
-                        <input
-                          type="number"
-                          className="custom-input"
-                          value={salary[key]}
-                          onChange={(e) =>
-                            handleChange(key, (e.target.value))
-                          }
-                        />
-                      </div>
-
-                      {errors[key] && (
-                        <small className="text-danger">
-                          {errors[key]}
-                        </small>
-                      )}
-                    </div>
-                  ))}
-
-                  <div className="col-12 col-sm-6 col-lg-4">
-                    <label className="form-label fw-semibold">
-                      Net Salary
-                    </label>
-
-                    <input
-                      type="text"
-                      className="form-control fw-bold bg-light"
-                      value={netSalary.toFixed(2)}
-                      readOnly
-                    />
+            {activeTab === "structure" && (
+              <div className="salary-panel">
+                <div className="salary-panel-header">
+                  <div>
+                    <h5>Salary Structure</h5>
+                    <p>Update the employee's fixed monthly salary components.</p>
                   </div>
-                </div>
-
-                <div className="text-end ">
                   <button
-                    className="btn btn-success px-4"
+                    type="button"
+                    className="salary-action-btn is-primary"
                     onClick={handleSaveSalary}
+                    disabled={loading}
                   >
-                    Save Salary
+                    {loading ? "Saving..." : "Save Salary"}
                   </button>
                 </div>
 
-                {/* Increment */}
-                <div className="card border-0 bg-light">
-                  <div className="card-body">
-                    <h6 className="fw-bold mb-3">Apply Increment</h6>
+                <div className="salary-form-grid">
+                  {salaryFields.map((field) => (
+                    <label key={field} className="salary-input-card">
+                      <span>{salaryLabels[field]}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={salary[field]}
+                        onChange={(e) =>
+                          setSalary((prev) => ({
+                            ...prev,
+                            [field]: e.target.value,
+                          }))
+                        }
+                      />
+                      {errors[field] && (
+                        <small className="salary-error">{errors[field]}</small>
+                      )}
+                    </label>
+                  ))}
 
-                    <div className="row g-3 align-items-end">
-                      <div className="col-12 col-sm-6 col-lg-4">
-                        <div className="input-group-m">
-                          <span className="input-addon">
-                            Increment
-                          </span>
-
-                          <input
-                            type="number"
-                            className="custom-input"
-                            value={incrementAmount}
-                            onChange={(e) =>
-                              setIncrementAmount(e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-12 col-sm-6 col-lg-4">
-                        <div className="input-group-m">
-                          <span className="input-addon">
-                            Remarks
-                          </span>
-
-                          <input
-                            type="text"
-                            className="custom-input"
-                            value={remarks}
-                            onChange={(e) =>
-                              setRemarks(e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-12 col-sm-6 col-lg-4 d-grid">
-                        <button
-                          className="btn btn-warning"
-                          onClick={handleIncrement}
-                        >
-                          Apply Increment
-                        </button>
-                      </div>
-                    </div>
+                  <div className="salary-input-card is-total">
+                    <span>Net Salary</span>
+                    <strong>{formatMoney(netSalary)}</strong>
+                    <small>Auto-calculated from all salary heads</small>
                   </div>
                 </div>
-              </>
-            )}
 
-            {/* Salary History */}
-            {activeTab === "history" && (
-              <div className="table-responsive">
-                <table className="table table-striped table-bordered align-middle salary-history-table">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Period</th>
-                      {salaryFields.map((field) => (
-                        <th key={field}>{salaryLabels[field]}</th>
-                      ))}
-                      <th>Total</th>
-                      <th>Updated</th>
-                    </tr>
-                  </thead>
+                <div className="salary-subpanel">
+                  <div className="salary-panel-header compact">
+                    <div>
+                      <h5>Apply Increment</h5>
+                      <p>Increase the employee's basic salary and keep history.</p>
+                    </div>
+                  </div>
 
-                  <tbody>
-                    {salaryHistory.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={salaryFields.length + 3}
-                          className="text-center text-muted py-4"
-                        >
-                          No salary history found
-                        </td>
-                      </tr>
-                    ) : (
-                      salaryHistory.map((h, index) => (
-                        <tr
-                          key={h._id || index}
-                          className={index === 0 ? "table-success" : ""}
-                        >
-                          <td className="fw-semibold">
-                            {monthNames[h.month] || h.month} {h.year}
-                          </td>
-                          {salaryFields.map((field) => (
-                            <td key={field}>{formatMoney(h.salary?.[field])}</td>
-                          ))}
-                          <td className="fw-bold">
-                            {formatMoney(getHistoryTotal(h))}
-                          </td>
-                          <td>{formatDate(h.updatedAt || h.createdAt || h.date)}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                  <div className="salary-inline-grid">
+                    <label className="salary-inline-field">
+                      <span>Increment Amount</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={incrementAmount}
+                        onChange={(e) => setIncrementAmount(e.target.value)}
+                      />
+                    </label>
+
+                    <label className="salary-inline-field">
+                      <span>Remarks</span>
+                      <input
+                        type="text"
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        placeholder="Promotion, annual revision, etc."
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className="salary-action-btn is-warning"
+                      onClick={handleIncrement}
+                      disabled={loading}
+                    >
+                      {loading ? "Applying..." : "Apply Increment"}
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Increment History */}
+            {activeTab === "payroll" && (
+              <div className="salary-panel">
+                <div className="salary-panel-header">
+                  <div>
+                    <h5>Monthly Payroll</h5>
+                    <p>
+                      Salary is auto-calculated from working days, attendance,
+                      paid leave, unpaid leave, and half days.
+                    </p>
+                  </div>
+
+                  <div className="salary-panel-actions">
+                    <button
+                      type="button"
+                      className="salary-action-btn is-secondary"
+                      onClick={() => loadPayrollPreview()}
+                      disabled={loading}
+                    >
+                      {loading ? "Calculating..." : "Calculate Payroll"}
+                    </button>
+                    <button
+                      type="button"
+                      className="salary-action-btn is-success"
+                      onClick={handlePaySalary}
+                      disabled={
+                        loading ||
+                        !payrollPreview ||
+                        payrollPreview.paymentStatus === "Paid"
+                      }
+                    >
+                      {payrollPreview?.paymentStatus === "Paid"
+                        ? "Already Paid"
+                        : "Pay Salary"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="salary-inline-grid payroll-controls">
+                  <label className="salary-inline-field">
+                    <span>Payroll Month</span>
+                    <input
+                      type="month"
+                      value={payrollPeriod}
+                      onChange={(e) => handlePayrollPeriodChange(e.target.value)}
+                    />
+                  </label>
+
+                  <label className="salary-inline-field is-wide">
+                    <span>Payment Notes</span>
+                    <input
+                      type="text"
+                      value={payrollNotes}
+                      onChange={(e) => setPayrollNotes(e.target.value)}
+                      placeholder="Optional note for this salary payment"
+                    />
+                  </label>
+                </div>
+
+                {payrollPreview ? (
+                  <>
+                    <div className="payroll-status-row">
+                      <div className="payroll-status-card">
+                        <span>Status</span>
+                        <strong
+                          className={getPayrollStatusClass(
+                            payrollPreview.paymentStatus,
+                          )}
+                        >
+                          {payrollPreview.paymentStatus || "Pending"}
+                        </strong>
+                        <small>
+                          {payrollPreview.paymentStatus === "Paid"
+                            ? `Paid on ${formatDate(payrollPreview.paidAt)}`
+                            : "Not paid yet"}
+                        </small>
+                      </div>
+
+                      <div className="payroll-status-card">
+                        <span>Gross Salary</span>
+                        <strong>{formatMoney(payrollPreview.grossSalary)}</strong>
+                        <small>Monthly fixed salary structure</small>
+                      </div>
+
+                      <div className="payroll-status-card">
+                        <span>Deduction</span>
+                        <strong>
+                          {formatMoney(payrollPreview.deductionAmount)}
+                        </strong>
+                        <small>
+                          {Number(payrollPreview.deductionDays || 0)} unpaid day(s)
+                        </small>
+                      </div>
+
+                      <div className="payroll-status-card accent">
+                        <span>Payable Salary</span>
+                        <strong>
+                          {formatMoney(payrollPreview.payableSalary)}
+                        </strong>
+                        <small>{payrollRate}% attendance payout rate</small>
+                      </div>
+                    </div>
+
+                    <div className="payroll-metrics-grid">
+                      <div className="metric-card">
+                        <span>Working Days</span>
+                        <strong>{payrollPreview.workingDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Present</span>
+                        <strong>{payrollPreview.presentDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Late</span>
+                        <strong>{payrollPreview.lateDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Half Days</span>
+                        <strong>{payrollPreview.halfDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Paid Leave</span>
+                        <strong>{payrollPreview.paidLeaveDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Unpaid Leave</span>
+                        <strong>{payrollPreview.unpaidLeaveDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Unpaid Attendance</span>
+                        <strong>
+                          {payrollPreview.unpaidAttendanceDays || 0}
+                        </strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Weekly Offs</span>
+                        <strong>{payrollPreview.weeklyOffDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Holidays</span>
+                        <strong>{payrollPreview.holidayDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Per Day Salary</span>
+                        <strong>{formatMoney(payrollPreview.perDaySalary)}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Payable Days</span>
+                        <strong>{payrollPreview.payableDays || 0}</strong>
+                      </div>
+                      <div className="metric-card">
+                        <span>Absent</span>
+                        <strong>{payrollPreview.absentDays || 0}</strong>
+                      </div>
+                    </div>
+
+                    {payrollPreview.notes && (
+                      <div className="salary-callout">
+                        <strong>Payment Note:</strong> {payrollPreview.notes}
+                      </div>
+                    )}
+
+                    <div className="table-responsive salary-table-wrap">
+                      <table className="table salary-data-table align-middle">
+                        <thead>
+                          <tr>
+                            <th>Period</th>
+                            <th>Status</th>
+                            <th>Gross</th>
+                            <th>Deduction</th>
+                            <th>Payable</th>
+                            <th>Paid On</th>
+                            <th>Paid By</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payrollHistory.length === 0 ? (
+                            <tr>
+                              <td
+                                colSpan="7"
+                                className="text-center text-muted py-4"
+                              >
+                                No payroll payments recorded yet
+                              </td>
+                            </tr>
+                          ) : (
+                            payrollHistory.map((record) => (
+                              <tr key={record._id}>
+                                <td className="fw-semibold">
+                                  {formatMonthYear(record.month, record.year)}
+                                </td>
+                                <td>
+                                  <span
+                                    className={`status-chip ${getPayrollStatusClass(
+                                      record.paymentStatus,
+                                    )}`}
+                                  >
+                                    {record.paymentStatus}
+                                  </span>
+                                </td>
+                                <td>{formatMoney(record.grossSalary)}</td>
+                                <td>{formatMoney(record.deductionAmount)}</td>
+                                <td className="fw-bold">
+                                  {formatMoney(record.payableSalary)}
+                                </td>
+                                <td>{formatDate(record.paidAt)}</td>
+                                <td>{record.paidBy?.name || "-"}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : (
+                  <div className="salary-empty-state">
+                    Save salary structure first, then calculate payroll for the
+                    selected month.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "history" && (
+              <div className="salary-panel">
+                <div className="salary-panel-header compact">
+                  <div>
+                    <h5>Salary History</h5>
+                    <p>Monthly snapshots of salary structure changes.</p>
+                  </div>
+                </div>
+
+                <div className="table-responsive salary-table-wrap">
+                  <table className="table salary-data-table align-middle">
+                    <thead>
+                      <tr>
+                        <th>Period</th>
+                        {salaryFields.map((field) => (
+                          <th key={field}>{salaryLabels[field]}</th>
+                        ))}
+                        <th>Total</th>
+                        <th>Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {salaryHistory.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={salaryFields.length + 3}
+                            className="text-center text-muted py-4"
+                          >
+                            No salary history found
+                          </td>
+                        </tr>
+                      ) : (
+                        salaryHistory.map((record, index) => (
+                          <tr key={record._id || index}>
+                            <td className="fw-semibold">
+                              {formatMonthYear(record.month, record.year)}
+                            </td>
+                            {salaryFields.map((field) => (
+                              <td key={field}>
+                                {formatMoney(record.salary?.[field])}
+                              </td>
+                            ))}
+                            <td className="fw-bold">
+                              {formatMoney(getHistoryTotal(record))}
+                            </td>
+                            <td>
+                              {formatDate(record.updatedAt || record.createdAt)}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {activeTab === "increment" && (
-              <>
-                <div className="increment-summary-grid mb-3">
+              <div className="salary-panel">
+                <div className="increment-summary-grid">
                   <div className="increment-summary-item">
                     <span>Total Increment</span>
                     <strong>{formatMoney(totalIncrementAmount)}</strong>
@@ -575,9 +895,9 @@ const ManageSalary = () => {
                   </div>
                 </div>
 
-                <div className="table-responsive">
-                  <table className="table table-striped table-bordered align-middle increment-history-table">
-                    <thead className="table-light">
+                <div className="table-responsive salary-table-wrap">
+                  <table className="table salary-data-table align-middle">
+                    <thead>
                       <tr>
                         <th>Date</th>
                         <th className="text-end">Previous Basic</th>
@@ -599,44 +919,40 @@ const ManageSalary = () => {
                           </td>
                         </tr>
                       ) : (
-                        incrementHistory.map((i, index) => {
-                          const previousBasic = getPreviousBasic(i);
-                          const newBasic = getNewBasic(i);
-
-                          return (
-                            <tr
-                              key={i._id || index}
-                              className={index === 0 ? "table-success" : ""}
-                            >
-                              <td className="fw-semibold">
-                                {formatDate(i.createdAt)}
-                              </td>
-                              <td className="text-end">
-                                {formatOptionalMoney(previousBasic)}
-                              </td>
-                              <td className="text-end fw-bold text-success">
-                                {formatMoney(i.amount)}
-                              </td>
-                              <td className="text-end fw-semibold">
-                                {formatOptionalMoney(newBasic)}
-                              </td>
-                              <td className="increment-remarks">
-                                {i.remarks || "-"}
-                              </td>
-                              <td>{getAppliedByName(i)}</td>
-                            </tr>
-                          );
-                        })
+                        incrementHistory.map((increment, index) => (
+                          <tr key={increment._id || index}>
+                            <td className="fw-semibold">
+                              {formatDate(increment.createdAt)}
+                            </td>
+                            <td className="text-end">
+                              {formatOptionalMoney(getPreviousBasic(increment))}
+                            </td>
+                            <td className="text-end fw-bold text-success">
+                              {formatMoney(increment.amount)}
+                            </td>
+                            <td className="text-end fw-semibold">
+                              {formatOptionalMoney(getNewBasic(increment))}
+                            </td>
+                            <td className="increment-remarks">
+                              {increment.remarks || "-"}
+                            </td>
+                            <td>{getAppliedByName(increment)}</td>
+                          </tr>
+                        ))
                       )}
                     </tbody>
                   </table>
                 </div>
-              </>
+              </div>
             )}
+          </>
+        ) : (
+          <div className="salary-empty-state">
+            Search and select an employee to manage salary and payroll.
           </div>
-        </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

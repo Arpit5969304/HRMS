@@ -5,15 +5,15 @@ import React, { useState, useEffect } from "react";
 import "../assets/styles/layout.css";
 
 function DashboardLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const getIsMobile = () => window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(getIsMobile);
+  const [sidebarOpen, setSidebarOpen] = useState(() => !getIsMobile());
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 768;
+      const mobile = getIsMobile();
       setIsMobile(mobile);
 
-      // auto close on mobile
       if (mobile) {
         setSidebarOpen(false);
       } else {
@@ -21,9 +21,25 @@ function DashboardLayout() {
       }
     };
 
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
+  }, [isMobile, sidebarOpen]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);

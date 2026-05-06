@@ -1,117 +1,238 @@
-/* ===== HEADER RESPONSIVE ===== */
-.employee-salary-page .card-header {
+.employee-payroll-page {
+  padding: clamp(12px, 2vw, 24px);
+}
+
+.employee-payroll-shell {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: clamp(16px, 2vw, 28px);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+}
+
+.employee-payroll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.employee-payroll-header h3 {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.employee-payroll-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.employee-payroll-period {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #eff6ff, #f8fafc);
+  color: #1d4ed8;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.employee-payroll-empty {
+  padding: 28px 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  text-align: center;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.employee-salary-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-card,
+.salary-breakdown-card,
+.status-box,
+.metric-box {
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.summary-card span,
+.salary-breakdown-card span,
+.status-box span,
+.metric-box span {
+  display: block;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.summary-card strong,
+.salary-breakdown-card strong,
+.status-box strong,
+.metric-box strong {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 1.18rem;
+}
+
+.summary-card small,
+.status-box small {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+}
+
+.summary-card.accent,
+.status-box.accent {
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+}
+
+.employee-salary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.employee-payroll-card {
+  margin-bottom: 18px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.employee-payroll-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.employee-payroll-card-header h5 {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.employee-payroll-card-header p {
+  margin: 0;
+  color: #64748b;
+}
+
+.employee-payroll-actions {
+  display: flex;
   flex-wrap: wrap;
   gap: 10px;
 }
 
-/* ===== SUMMARY CARDS ===== */
-@media (max-width: 992px) {
-
-  .employee-salary-page .row.mb-4 > div {
-    margin-bottom: 10px;
-  }
-
+.employee-payroll-actions input {
+  min-height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 10px 12px;
 }
 
-/* ===== MOBILE FIX ===== */
-@media (max-width: 768px) {
+.employee-payroll-status-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
 
-  /* Header stack */
-  .employee-salary-page .card-header {
+.employee-payroll-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.employee-payroll-note {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
+}
+
+.employee-payroll-table {
+  min-width: 760px;
+  margin-bottom: 0;
+}
+
+.employee-payroll-table th,
+.employee-payroll-table td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.is-paid {
+  color: #047857;
+  background: #dcfce7;
+}
+
+.is-pending {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.status-box strong.is-paid,
+.status-box strong.is-pending {
+  background: transparent;
+  padding: 0;
+}
+
+@media (max-width: 1200px) {
+  .employee-salary-summary,
+  .employee-payroll-status-row,
+  .employee-payroll-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .employee-payroll-header,
+  .employee-payroll-card-header {
     flex-direction: column;
-    align-items: flex-start !important;
   }
 
-  .employee-salary-page .card-header h4 {
-    font-size: 18px;
+  .employee-salary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
-  /* Employee info */
-  .employee-salary-page .card-body h5 {
-    font-size: 16px;
-  }
-
-  /* Summary cards full width */
-  .employee-salary-page .row.mb-4 {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .employee-salary-page .row.mb-4 > div {
-    width: 100%;
-  }
-
-  /* Table scroll */
-  .employee-salary-page .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .employee-salary-page .table {
-    min-width: 700px; /* prevent break */
-  }
-
-  /* Compact table text */
-  .employee-salary-page .table th,
-  .employee-salary-page .table td {
-    font-size: 13px;
-    white-space: nowrap;
-  }
-
 }
 
-/* ===== SMALL MOBILE ===== */
-@media (max-width: 480px) {
-
-  .employee-salary-page .card {
-    padding: 10px;
+@media (max-width: 640px) {
+  .employee-salary-summary,
+  .employee-salary-grid,
+  .employee-payroll-status-row,
+  .employee-payroll-metrics {
+    grid-template-columns: 1fr;
   }
 
-  .employee-salary-page .card-header h4 {
-    font-size: 16px;
+  .employee-payroll-table {
+    min-width: 680px;
   }
-
-  .employee-salary-page .table th,
-  .employee-salary-page .table td {
-    font-size: 12px;
-  }
-
-}
-
-
-
-/* ===== STICKY FIRST COLUMN (MOBILE ONLY) ===== */
-@media (max-width: 768px) {
-
-  /* Ensure scroll */
-  .employee-salary-page .table-responsive {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .employee-salary-page .table {
-    min-width: 700px;
-  }
-
-  /* Sticky first column */
-  .employee-salary-page .table th:first-child,
-  .employee-salary-page .table td:first-child {
-    position: sticky;
-    left: 0;
-    z-index: 2;
-    background: #fff; /* important */
-  }
-
-  /* Header priority */
-  .employee-salary-page .table thead th:first-child {
-    z-index: 3;
-  }
-
-  /* Optional shadow for separation */
-  .employee-salary-page .table th:first-child,
-  .employee-salary-page .table td:first-child {
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-  }
-
 }
