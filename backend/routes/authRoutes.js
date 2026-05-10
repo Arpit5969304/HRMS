@@ -1,15 +1,15 @@
 import express from "express";
-import { login, logout } from "../controllers/authController.js";
-
-// 🔥 ADD THIS
+import {
+  login,
+  logout,
+  resetPasswordWithCode,
+} from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ➤ LOGIN (Public)
 router.post("/login", login);
-
-// ➤ LOGOUT (Protected)
+router.post("/reset-password-with-code", resetPasswordWithCode);
 router.post("/logout", protect, logout);
 
 export default router;

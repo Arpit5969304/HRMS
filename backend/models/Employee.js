@@ -36,13 +36,30 @@ const employeeSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
-      select: false, // 🔐 IMPORTANT
+      select: false,
+    },
+
+    recoveryCodeHash: {
+      type: String,
+      select: false,
+      default: "",
+    },
+
+    recoveryCodeUpdatedAt: {
+      type: Date,
+      default: null,
     },
 
     phone: {
       type: String,
       match: [/^[0-9]{10}$/, "Phone must be 10 digits"],
       trim: true,
+    },
+
+    address: {
+      type: String,
+      trim: true,
+      default: "",
     },
 
     gender: {
@@ -53,7 +70,7 @@ const employeeSchema = new mongoose.Schema(
 
     department: {
       type: String,
-      enum: ["HR", "IT", "Finance","Human Resources"],
+      enum: ["HR", "IT", "Finance", "Human Resources"],
       required: true,
       index: true,
     },
@@ -69,7 +86,6 @@ const employeeSchema = new mongoose.Schema(
       default: "Employee",
     },
 
-    // 🔥 RELATION (BEST PRACTICE)
     manager: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Employee",
@@ -95,7 +111,7 @@ const employeeSchema = new mongoose.Schema(
     dob: {
       type: Date,
       validate: {
-        validator: (v) => v < new Date(),
+        validator: (value) => value < new Date(),
         message: "DOB must be in past",
       },
     },
@@ -105,7 +121,6 @@ const employeeSchema = new mongoose.Schema(
       default: "",
     },
 
-    // 🔥 Soft delete support
     isDeleted: {
       type: Boolean,
       default: false,
@@ -118,30 +133,21 @@ const employeeSchema = new mongoose.Schema(
   },
 );
 
-/* ==============================
-   🔥 VIRTUALS
-============================== */
-
-// Full Name
-employeeSchema.virtual("fullName").get(function () {
+employeeSchema.virtual("fullName").get(function getFullName() {
   return `${this.firstName} ${this.lastName}`;
 });
 
-/* ==============================
-   🔥 INDEXES (PERFORMANCE)
-============================== */
 employeeSchema.index({ email: 1 });
 employeeSchema.index({ employeeId: 1 });
 employeeSchema.index({ department: 1 });
 employeeSchema.index({ status: 1 });
 
-/* ==============================
-   🔥 CLEAN DATA BEFORE SAVE
-============================== */
-employeeSchema.pre("save", function (next) {
+employeeSchema.pre("save", function trimEmployeeData(next) {
   if (this.firstName) this.firstName = this.firstName.trim();
   if (this.lastName) this.lastName = this.lastName.trim();
   if (this.phone) this.phone = this.phone.trim();
+  if (this.address) this.address = this.address.trim();
+  next();
 });
 
 export default mongoose.model("Employee", employeeSchema);

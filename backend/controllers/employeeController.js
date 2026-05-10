@@ -223,6 +223,36 @@ export const updateMyProfile = async (req, res) => {
       updateData.email = email;
     }
 
+    if (data.gender !== undefined) {
+      const gender = data.gender.trim();
+
+      if (gender && !["Male", "Female", "Other"].includes(gender)) {
+        return res.status(400).json({ message: "Invalid gender" });
+      }
+
+      if (gender) {
+        updateData.gender = gender;
+      }
+    }
+
+    if (data.address !== undefined) {
+      updateData.address = data.address.trim();
+    }
+
+    if (data.dob !== undefined) {
+      const dobValue = data.dob.trim();
+
+      if (dobValue) {
+        const dob = new Date(dobValue);
+
+        if (Number.isNaN(dob.getTime()) || dob >= new Date()) {
+          return res.status(400).json({ message: "DOB must be in the past" });
+        }
+
+        updateData.dob = dob;
+      }
+    }
+
     if (data.password) {
       if (data.password.length < 6) {
         return res.status(400).json({
@@ -231,6 +261,21 @@ export const updateMyProfile = async (req, res) => {
       }
 
       updateData.password = await bcrypt.hash(data.password, 10);
+    }
+
+    if (data.recoveryCode !== undefined) {
+      const recoveryCode = data.recoveryCode.trim();
+
+      if (recoveryCode) {
+        if (recoveryCode.length < 4 || recoveryCode.length > 32) {
+          return res.status(400).json({
+            message: "Recovery code must be between 4 and 32 characters",
+          });
+        }
+
+        updateData.recoveryCodeHash = await bcrypt.hash(recoveryCode, 10);
+        updateData.recoveryCodeUpdatedAt = new Date();
+      }
     }
 
     if (req.file) {

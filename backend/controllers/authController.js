@@ -1,12 +1,9 @@
-import Employee from "../models/Employee.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import Employee from "../models/Employee.js";
 
-/* ==============================
-   ➤ GENERATE TOKEN
-============================== */
-const generateToken = (user) => {
-  return jwt.sign(
+const generateToken = (user) =>
+  jwt.sign(
     {
       id: user._id,
       role: user.role,
@@ -14,14 +11,8 @@ const generateToken = (user) => {
     process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRE || "7d",
-    }
+    },
   );
-};
-
-/* ==============================
-   ➤ LOGIN
-============================== */
-
 
 export const login = async (req, res) => {
   try {
@@ -35,7 +26,6 @@ export const login = async (req, res) => {
 
     email = email.toLowerCase().trim();
 
-    // 🔥 FIX HERE
     const user = await Employee.findOne({ email }).select("+password");
 
     if (!user) {
@@ -50,7 +40,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // 🔥 SAFE CHECK
     if (!user.password) {
       return res.status(500).json({
         message: "Password not found. Contact developer",
@@ -66,7 +55,6 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user);
-
     const userData = user.toObject();
     delete userData.password;
 
@@ -83,15 +71,76 @@ export const login = async (req, res) => {
   }
 };
 
+export const resetPasswordWithCode = async (req, res) => {
+  try {
+    let { email, recoveryCode, newPassword } = req.body;
 
-/* ==============================
-   ➤ LOGOUT
-============================== */
+    if (!email || !recoveryCode || !newPassword) {
+      return res.status(400).json({
+        message: "Email, recovery code and new password are required",
+      });
+    }
+
+    email = email.toLowerCase().trim();
+    recoveryCode = recoveryCode.trim();
+    newPassword = newPassword.trim();
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters",
+      });
+    }
+
+    const user = await Employee.findOne({ email }).select(
+      "+password +recoveryCodeHash",
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        message: "No account found with this email",
+      });
+    }
+
+    if (user.status !== "active") {
+      return res.status(403).json({
+        message: "Account is inactive. Contact admin",
+      });
+    }
+
+    if (!user.recoveryCodeHash) {
+      return res.status(400).json({
+        message:
+          "Recovery code is not set for this account. Sign in first and save one from your profile, or contact admin.",
+      });
+    }
+
+    const isRecoveryCodeValid = await bcrypt.compare(
+      recoveryCode,
+      user.recoveryCodeHash,
+    );
+
+    if (!isRecoveryCodeValid) {
+      return res.status(401).json({
+        message: "Invalid recovery code",
+      });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+
+    res.json({
+      message: "Password reset successful. You can now log in.",
+    });
+  } catch (error) {
+    console.error("RESET PASSWORD WITH CODE ERROR:", error);
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+};
+
 export const logout = async (req, res) => {
   try {
-    // 🔥 If using cookies:
-    // res.clearCookie("token");
-
     res.json({
       message: "Logout successful",
     });

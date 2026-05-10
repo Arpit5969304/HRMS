@@ -1,167 +1,83 @@
-import React, { useState } from "react";
+import React from "react";
 import "../../assets/styles/Attendance.css";
-import { GrEdit } from "react-icons/gr";
-import API from "../../utils/axios";
-const AttendanceList = ({
-  selectedYear,
-  selectedMonth,
-  attendanceData,
-  setAttendanceData,
-}) => {
-  const totalDays = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-  const daysArray = [];
 
-  const [selectedDay, setSelectedDay] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const AttendanceList = ({ selectedLabel, records, isFutureView }) => {
+  if (!records.length) {
+    return (
+      <section className="attendance-panel attendance-records-panel">
+        <div className="attendance-panel-head">
+          <div>
+            <span className="attendance-card-label">Daily records</span>
+            <h2>Attendance history</h2>
+            <p>
+              {isFutureView
+                ? `Attendance records for ${selectedLabel} will appear once the month begins.`
+                : `Attendance entries for ${selectedLabel} will show up here as soon as they are recorded.`}
+            </p>
+          </div>
+        </div>
 
-  // Current date
-  const today = new Date();
-  const currentDay = today.getDate();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-
-  // Only show till current date if current month selected
-  const maxDay =
-    selectedYear === currentYear && selectedMonth === currentMonth
-      ? currentDay
-      : totalDays;
-
-  for (let d = 1; d <= maxDay; d++) {
-    const statusData = attendanceData[selectedYear]?.[selectedMonth]?.[d] || {};
-    const dateObj = new Date(selectedYear, selectedMonth, d);
-    const dayName = dateObj.toLocaleDateString("en-US", { weekday: "long" });
-
-    let finalStatus = "-";
-
-    if (typeof statusData === "string") {
-      finalStatus = statusData;
-    } else if (statusData.status) {
-      finalStatus = statusData.status;
-    } else if (dayName === "Sunday") {
-      finalStatus = "Sunday";
-    }
-
-    daysArray.push({
-      date: `${d}/${selectedMonth + 1}/${selectedYear}`,
-      status: finalStatus,
-      checkIn: statusData.checkIn || "-",
-      checkOut: statusData.checkOut || "-",
-      duration:
-        statusData.checkIn && statusData.checkOut
-          ? calculateDuration(statusData.checkIn, statusData.checkOut)
-          : "-",
-      breakTime: statusData.break || "-",
-    });
-  }
-
-  const savetheChanges = async () => {
-    try {
-      const dayNumber = new Date(selectedDay.date).getDate();
-
-      const record = attendanceData[selectedYear]?.[selectedMonth]?.[dayNumber];
-
-      if (!record?._id) {
-        alert("Record not found");
-        return;
-      }
-
-      await API.put(`/attendance/admin/${record._id}`, {
-        checkIn: selectedDay.checkIn,
-        checkOut: selectedDay.checkOut,
-      });
-
-      alert("Updated successfully");
-
-      setIsModalOpen(false);
-
-      window.location.reload(); // quick refresh
-    } catch (err) {
-      console.error(err);
-      alert("Update failed");
-    }
-  };
-
-  function calculateDuration(start, end) {
-    const [sh, sm] = start.split(":").map(Number);
-    const [eh, em] = end.split(":").map(Number);
-
-    const startMinutes = sh * 60 + sm;
-    const endMinutes = eh * 60 + em;
-
-    const diff = endMinutes - startMinutes;
-
-    const hours = Math.floor(diff / 60)
-      .toString()
-      .padStart(2, "0");
-    const minutes = (diff % 60).toString().padStart(2, "0");
-
-    return `${hours}:${minutes}:00`;
+        <div className="attendance-empty-state">
+          {isFutureView
+            ? "This is an upcoming month, so there are no work logs yet."
+            : "No attendance records are available for this period yet."}
+        </div>
+      </section>
+    );
   }
 
   return (
-    <div className="attendance-list-section">
-      <div className="table-responsive">
-        <table className="attendance-table">
+    <section className="attendance-panel attendance-records-panel">
+      <div className="attendance-panel-head">
+        <div>
+          <span className="attendance-card-label">Daily records</span>
+          <h2>Attendance history</h2>
+          <p>
+            A detailed day-by-day breakdown for {selectedLabel}, including
+            timing, hours, and any note attached to the record.
+          </p>
+        </div>
+      </div>
+
+      <div className="attendance-records-table-wrap">
+        <table className="attendance-records-table">
           <thead>
             <tr>
-              <th className="top-tr" colSpan="8">
-                Attendance List - {selectedMonth + 1}/{selectedYear}
-              </th>
-            </tr>
-
-            <tr>
               <th>Date</th>
+              <th>Day</th>
               <th>Status</th>
               <th>Check In</th>
               <th>Check Out</th>
-              <th>Duration</th>
-              <th>Break</th>
-              <th>Note</th>
-              <th>Edit</th>
+              <th>Hours</th>
+              <th>Notes</th>
             </tr>
           </thead>
 
           <tbody>
-            {daysArray.map((day, idx) => (
-              <tr key={idx}>
-                <td>{day.date}</td>
-
-                <td
-                  className={
-                    day.status === "present"
-                      ? "present"
-                      : day.status === "absent"
-                        ? "absent"
-                        : day.status === "Sunday"
-                          ? "sunday"
-                          : ""
-                  }
-                >
-                  {day.status !== "-"
-                    ? day.status.charAt(0).toUpperCase() + day.status.slice(1)
-                    : "-"}
-                </td>
-
-                <td>{day.checkIn}</td>
-
-                <td>{day.checkOut}</td>
-
-                <td>{day.duration}</td>
-
-                <td>{day.breakTime}</td>
-
-                <td>-</td>
-
+            {records.map((record) => (
+              <tr key={record.dateLabel}>
                 <td>
-                  <button
-                    className="edit-btn"
-                    onClick={() => {
-                      setSelectedDay(day);
-                      setIsModalOpen(true);
-                    }}
+                  <div className="attendance-record-date">
+                    <strong>{record.dateLabel}</strong>
+                    {record.isToday && <span>Today</span>}
+                  </div>
+                </td>
+                <td>{record.weekdayLabel}</td>
+                <td>
+                  <span
+                    className={`attendance-status-badge is-${record.statusKey}`}
                   >
-                    <GrEdit className="edit-icon" />
-                  </button>
+                    {record.statusLabel}
+                  </span>
+                </td>
+                <td>{record.checkInLabel}</td>
+                <td>{record.checkOutLabel}</td>
+                <td>{record.hoursLabel}</td>
+                <td>
+                  <div className="attendance-note-cell">
+                    <strong>{record.noteLabel}</strong>
+                    <span>{record.note || "No note added for this day."}</span>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -169,65 +85,49 @@ const AttendanceList = ({
         </table>
       </div>
 
-      {isModalOpen && (
-        <div className="modal-overlay-att">
-          <div className="modal-container-att px-2 px-sm-3">
-            <div className="modal-header">
-              <h3>Edit Attendance</h3>
+      <div className="attendance-records-mobile">
+        {records.map((record) => (
+          <article
+            key={`${record.dateLabel}-mobile`}
+            className={`attendance-record-card is-${record.statusKey}`}
+          >
+            <div className="attendance-record-card-top">
+              <div>
+                <strong>{record.dateLabel}</strong>
+                <span>{record.weekdayLabel}</span>
+              </div>
 
-              <span onClick={() => setIsModalOpen(false)} className="close-btn">
-                ✖
+              <span className={`attendance-status-badge is-${record.statusKey}`}>
+                {record.statusLabel}
               </span>
             </div>
 
-            <div className="modal-body">
-              <label>Check-In</label>
-
-              <input
-                className="w-100"
-                type="time"
-                value={selectedDay?.checkIn === "-" ? "" : selectedDay?.checkIn}
-                onChange={(e) =>
-                  setSelectedDay({ ...selectedDay, checkIn: e.target.value })
-                }
-              />
-
-              <label>Check-Out</label>
-
-              <input
-                className="w-100"
-                type="time"
-                value={
-                  selectedDay?.checkOut === "-" ? "" : selectedDay?.checkOut
-                }
-                onChange={(e) =>
-                  setSelectedDay({ ...selectedDay, checkOut: e.target.value })
-                }
-              />
-
-              <label>Remarks</label>
-              <textarea
-                className="w-100"
-                placeholder="Enter remarks..."
-              ></textarea>
+            <div className="attendance-record-card-grid">
+              <div>
+                <span>Check in</span>
+                <strong>{record.checkInLabel}</strong>
+              </div>
+              <div>
+                <span>Check out</span>
+                <strong>{record.checkOutLabel}</strong>
+              </div>
+              <div>
+                <span>Hours</span>
+                <strong>{record.hoursLabel}</strong>
+              </div>
+              <div>
+                <span>Note type</span>
+                <strong>{record.noteLabel}</strong>
+              </div>
             </div>
 
-            <div className="modal-footer">
-              <button
-                className="cancel-btn"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Cancel
-              </button>
-
-              <button onClick={savetheChanges} className="save-btn">
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+            <p className="attendance-record-card-note">
+              {record.note || "No note added for this day."}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 };
 
