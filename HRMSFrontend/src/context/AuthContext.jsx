@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
       try {
         await refreshUser();
       } catch (err) {
+        localStorage.removeItem("token");
         setUser(null);
       } finally {
         setLoading(false);
@@ -34,12 +35,30 @@ export const AuthProvider = ({ children }) => {
     loadUser();
   }, []);
 
-  const login = async (email, password) => {
-    const res = await API.post("/auth/login", { email, password });
+  const persistSession = (authResponse) => {
+    if (authResponse?.token && authResponse?.user) {
+      localStorage.setItem("token", authResponse.token);
+      setUser(authResponse.user);
+    }
 
-    localStorage.setItem("token", res.data.token);
-    setUser(res.data.user);
-    return res.data;
+    return authResponse;
+  };
+
+  const login = async (email, password, otp = "") => {
+    const payload = { email, password };
+
+    if (otp) {
+      payload.otp = otp;
+    }
+
+    const res = await API.post("/auth/login", payload);
+
+    return persistSession(res.data);
+  };
+
+  const loginWithGoogle = async (credential) => {
+    const res = await API.post("/auth/google", { credential });
+    return persistSession(res.data);
   };
 
   const logout = () => {
@@ -49,7 +68,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, refreshUser, login, logout, loading }}
+      value={{
+        user,
+        setUser,
+        refreshUser,
+        login,
+        loginWithGoogle,
+        logout,
+        loading,
+      }}
     >
       {children}
     </AuthContext.Provider>
