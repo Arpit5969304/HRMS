@@ -24,7 +24,14 @@ connectDB();
 const app = express();
 
 // ✅ Middleware
-app.use(cors());
+
+app.use(
+  cors({
+    origin: "https://hrms-liart-theta.vercel.app",
+    credentials: true,
+  }),
+);
+
 app.use(express.json());
 
 // ✅ Health Check
@@ -32,14 +39,11 @@ app.get("/", (req, res) => {
   res.send("HRMS Backend Running 🚀");
 });
 
-
-
-
 // ✅ API Routes
 app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leave", leaveRoutes);
-app.use("/api/salary",salaryRoutes);
+app.use("/api/salary", salaryRoutes);
 app.use("/api/holidays", holidayRoutes);
 app.use("/api/remarks", remarkRoutes);
 app.use("/api/admin", adminRoutes);
