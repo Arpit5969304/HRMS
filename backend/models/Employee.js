@@ -39,6 +39,43 @@ const employeeSchema = new mongoose.Schema(
       select: false,
     },
 
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+
+    googleAvatar: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    loginOtpHash: {
+      type: String,
+      select: false,
+      default: "",
+    },
+
+    loginOtpExpiresAt: {
+      type: Date,
+      select: false,
+      default: null,
+    },
+
+    passwordResetOtpHash: {
+      type: String,
+      select: false,
+      default: "",
+    },
+
+    passwordResetOtpExpiresAt: {
+      type: Date,
+      select: false,
+      default: null,
+    },
+
     recoveryCodeHash: {
       type: String,
       select: false,
@@ -141,6 +178,7 @@ employeeSchema.index({ email: 1 });
 employeeSchema.index({ employeeId: 1 });
 employeeSchema.index({ department: 1 });
 employeeSchema.index({ status: 1 });
+employeeSchema.index({ googleId: 1 }, { sparse: true });
 
 employeeSchema.pre("save", function trimEmployeeData(next) {
   if (this.firstName) this.firstName = this.firstName.trim();
