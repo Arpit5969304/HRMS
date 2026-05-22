@@ -16,7 +16,7 @@ const useDashboard = () => {
       try {
         const emp = await API.get("/employees").catch(() => ({ data: [] }));
         const att = await API.get("/attendance").catch(() => ({ data: [] }));
-        const leave = await API.get("/leaves").catch(() => ({ data: [] }));
+        const leave = await API.get("/leave").catch(() => ({ data: [] }));
         const holiday = await API.get("/holidays").catch(() => ({ data: [] }));
 
         setData({

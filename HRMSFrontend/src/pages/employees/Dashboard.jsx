@@ -173,7 +173,7 @@ const Dashboard = () => {
         const results = await Promise.allSettled([
           API.get("/employees"),
           API.get("/attendance/me"),
-          API.get("/leaves/my"),
+          API.get("/leave/my"),
           API.get("/holidays"),
           API.get("/announcements"),
           API.get("/tasks/my"),

@@ -25,9 +25,14 @@ const app = express();
 
 // ✅ Middleware
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://hrms-liart-theta.vercel.app",
+];
+
 app.use(
   cors({
-    origin: "https://hrms-liart-theta.vercel.app",
+    origin: allowedOrigins,
     credentials: true,
   }),
 );
