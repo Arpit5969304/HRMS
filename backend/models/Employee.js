@@ -180,12 +180,11 @@ employeeSchema.index({ department: 1 });
 employeeSchema.index({ status: 1 });
 employeeSchema.index({ googleId: 1 }, { sparse: true });
 
-employeeSchema.pre("save", function trimEmployeeData(next) {
+employeeSchema.pre("save", function trimEmployeeData() {
   if (this.firstName) this.firstName = this.firstName.trim();
   if (this.lastName) this.lastName = this.lastName.trim();
   if (this.phone) this.phone = this.phone.trim();
   if (this.address) this.address = this.address.trim();
-  next();
 });
 
 export default mongoose.model("Employee", employeeSchema);
