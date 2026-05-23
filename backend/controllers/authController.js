@@ -3,7 +3,11 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import Employee from "../models/Employee.js";
-import { sendOtpEmail } from "../utils/email.js";
+import {
+  isEmailConfigured,
+  isLoginOtpEnabled,
+  sendOtpEmail,
+} from "../utils/email.js";
 import { generateEmployeeId } from "../utils/employee.js";
 
 let googleClient;
@@ -105,6 +109,12 @@ const sendOtpAndPersist = async (user, fieldPrefix, purpose) => {
   }
 };
 
+const getEmailConfigurationError = (featureLabel = "Email authentication") =>
+  createHttpError(
+    500,
+    `${featureLabel} is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and MAIL_FROM in the backend environment.`,
+  );
+
 const getGoogleClient = () => {
   const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
 
@@ -204,6 +214,20 @@ export const login = async (req, res) => {
       return res.status(401).json({
         message: "Invalid credentials",
       });
+    }
+
+    const requireLoginOtp = isLoginOtpEnabled();
+
+    if (!requireLoginOtp) {
+      clearLoginOtp(user);
+      await user.save();
+      return sendAuthResponse(res, user, "Login successful");
+    }
+
+    if (!isEmailConfigured()) {
+      throw getEmailConfigurationError(
+        "Login OTP",
+      );
     }
 
     if (!otp) {
@@ -387,6 +411,12 @@ export const requestPasswordResetOtp = async (req, res) => {
         message:
           "If an active account exists for this email, a password reset OTP has been sent.",
       });
+    }
+
+    if (!isEmailConfigured()) {
+      throw getEmailConfigurationError(
+        "Password reset OTP",
+      );
     }
 
     await sendOtpAndPersist(user, "passwordReset", "passwordReset");

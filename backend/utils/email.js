@@ -1,5 +1,28 @@
 import nodemailer from "nodemailer";
 
+const parseBooleanEnv = (value = "") =>
+  ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
+
+export const isEmailConfigured = () => {
+  const host = process.env.SMTP_HOST?.trim();
+  const port = Number(process.env.SMTP_PORT || 0);
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.MAIL_FROM?.trim();
+
+  return Boolean(host && port && user && pass && from);
+};
+
+export const isLoginOtpEnabled = () => {
+  const configuredValue = process.env.LOGIN_OTP_ENABLED;
+
+  if (configuredValue == null || configuredValue.trim() === "") {
+    return isEmailConfigured();
+  }
+
+  return parseBooleanEnv(configuredValue);
+};
+
 const getEmailConfig = () => {
   const host = process.env.SMTP_HOST?.trim();
   const port = Number(process.env.SMTP_PORT || 0);
