@@ -56,6 +56,7 @@ export const sendOtpEmail = async ({
   expiryMinutes = 10,
 }) => {
   const { host, port, user, pass, from, secure } = getEmailConfig();
+  
   const transporter = nodemailer.createTransport({
     host,
     port,
@@ -100,8 +101,6 @@ export const sendOtpEmail = async ({
     });
   } catch (error) {
     console.error("OTP EMAIL ERROR:", error);
-    throw new Error(
-      "Unable to send OTP email. Check the email service configuration.",
-    );
+    throw  error;
   }
 };
